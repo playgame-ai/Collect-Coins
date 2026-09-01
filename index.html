@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <title>Coin Rush - Version 2</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="game-container">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+
+        <div>
+            💰 Coins:
+            <span id="coinDisplay">0</span>
+        </div>
+
+        <div>
+            🏆 Score:
+            <span id="scoreDisplay">0</span>
+        </div>
+
+        <div>
+            ⭐ Best:
+            <span id="bestDisplay">0</span>
+        </div>
+
+        <div>
+            ❤️ <span id="livesDisplay">3</span>
+        </div>
+
+        <div>
+            🔥 Lv.<span id="levelDisplay">1</span>
+        </div>
+
+    </div>
+
+
+    <!-- GAME -->
+    <canvas id="gameCanvas"></canvas>
+
+
+    <!-- START SCREEN -->
+    <div id="startScreen" class="screen">
+
+        <div class="logo">🪙</div>
+
+        <h1>COIN RUSH</h1>
+
+        <div class="version">VERSION 2</div>
+
+        <p>
+            Collect coins.<br>
+            Avoid obstacles.<br>
+            Grab power-ups!
+        </p>
+
+        <button id="startButton">
+            START GAME
+        </button>
+
+        <p class="controls">
+            ⬅️ ➡️ Arrow Keys / A D
+        </p>
+
+        <p class="mobile-hint">
+            📱 Use the buttons on mobile
+        </p>
+
+    </div>
+
+
+    <!-- GAME OVER -->
+    <div id="gameOverScreen" class="screen hidden">
+
+        <div class="game-over-icon">
+            💥
+        </div>
+
+        <h1>GAME OVER!</h1>
+
+        <p>Your Score</p>
+
+        <div class="final-score" id="finalScore">
+            0
+        </div>
+
+        <div class="results">
+
+            <div>
+                🪙 Coins
+                <strong id="finalCoins">0</strong>
+            </div>
+
+            <div>
+                🏆 Best
+                <strong id="finalBest">0</strong>
+            </div>
+
+        </div>
+
+        <button id="restartButton">
+            PLAY AGAIN
+        </button>
+
+    </div>
+
+
+    <!-- POWER UP MESSAGE -->
+    <div id="powerMessage"></div>
+
+
+    <!-- MOBILE CONTROLS -->
+    <div class="mobile-controls">
+
+        <button id="leftButton">
+            ◀
+        </button>
+
+        <button id="rightButton">
+            ▶
+        </button>
+
+    </div>
+
+
+    <!-- POWER-UP STATUS -->
+    <div class="power-status">
+
+        <div id="shieldStatus" class="status hidden">
+            🛡️ SHIELD
+        </div>
+
+        <div id="boostStatus" class="status hidden">
+            ⚡ BOOST
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="game.js"></script>
+
+</body>
+</html>
