@@ -1,3 +1,4 @@
+```css
 * {
     box-sizing: border-box;
     margin: 0;
@@ -14,7 +15,11 @@ body {
     font-family: Arial, sans-serif;
 
     background:
-        radial-gradient(circle at top, #374151, #111827 70%);
+        radial-gradient(
+            circle at top,
+            #374151,
+            #111827 70%
+        );
 
     color: white;
 
@@ -51,12 +56,14 @@ canvas {
     height: 100%;
 
     background: #111827;
+
+    touch-action: none;
 }
 
 
-/* -----------------------------
+/* =============================
    TOP BAR
------------------------------ */
+============================= */
 
 .top-bar {
     position: absolute;
@@ -65,24 +72,26 @@ canvas {
     left: 0;
 
     width: 100%;
+
     min-height: 58px;
 
     display: flex;
+
     justify-content: space-around;
     align-items: center;
 
-    padding: 5px;
+    padding: 5px 4px;
 
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0, 0, 0, 0.75);
 
-    backdrop-filter: blur(6px);
-
-    z-index: 5;
+    z-index: 20;
 
     font-size: 13px;
+
     font-weight: bold;
 
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.1);
 }
 
 .top-bar div {
@@ -90,9 +99,31 @@ canvas {
 }
 
 
-/* -----------------------------
+.pause-button {
+    width: 34px;
+    height: 34px;
+
+    padding: 0;
+
+    font-size: 16px;
+
+    border-radius: 8px;
+
+    box-shadow: none;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    color: white;
+}
+
+.pause-button:hover {
+    transform: scale(1.05);
+}
+
+
+/* =============================
    SCREENS
------------------------------ */
+============================= */
 
 .screen {
     position: absolute;
@@ -104,6 +135,7 @@ canvas {
     height: 100%;
 
     display: flex;
+
     flex-direction: column;
 
     justify-content: center;
@@ -112,11 +144,11 @@ canvas {
     background:
         radial-gradient(
             circle at center,
-            rgba(31, 41, 55, 0.75),
-            rgba(0, 0, 0, 0.9)
+            rgba(31, 41, 55, 0.78),
+            rgba(0, 0, 0, 0.92)
         );
 
-    z-index: 10;
+    z-index: 30;
 
     text-align: center;
 
@@ -125,7 +157,11 @@ canvas {
 
 
 .screen h1 {
-    font-size: clamp(38px, 10vw, 58px);
+    font-size: clamp(
+        38px,
+        10vw,
+        58px
+    );
 
     margin-bottom: 8px;
 
@@ -141,7 +177,7 @@ canvas {
 
     line-height: 1.5;
 
-    margin-bottom: 22px;
+    margin-bottom: 20px;
 
     opacity: 0.9;
 }
@@ -152,7 +188,10 @@ canvas {
 
     margin-bottom: 10px;
 
-    animation: coinFloat 1.5s ease-in-out infinite;
+    animation:
+        coinFloat 1.5s
+        ease-in-out
+        infinite;
 }
 
 
@@ -163,9 +202,47 @@ canvas {
 
     opacity: 0.6;
 
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
+
+.intro-text {
+    margin-bottom: 12px !important;
+}
+
+
+.feature-list {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    margin-bottom: 22px;
+}
+
+
+.feature-list span {
+    padding: 7px 10px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.1);
+
+    font-size: 12px;
+}
+
+
+/* =============================
+   BUTTONS
+============================= */
 
 button {
     border: none;
@@ -186,23 +263,26 @@ button {
 
     box-shadow:
         0 5px 0 #a16207,
-        0 8px 20px rgba(0, 0, 0, 0.35);
+        0 8px 20px
+        rgba(0, 0, 0, 0.35);
 
     transition:
-        transform 0.15s,
-        filter 0.15s;
+        transform 0.12s,
+        filter 0.12s;
 }
-
 
 button:hover {
-    transform: translateY(-2px) scale(1.04);
+    transform:
+        translateY(-2px)
+        scale(1.03);
 
-    filter: brightness(1.1);
+    filter: brightness(1.08);
 }
 
-
 button:active {
-    transform: translateY(4px) scale(0.97);
+    transform:
+        translateY(3px)
+        scale(0.98);
 
     box-shadow:
         0 1px 0 #a16207;
@@ -224,6 +304,8 @@ button:active {
     font-size: 12px !important;
 
     opacity: 0.5 !important;
+
+    margin-top: 4px;
 }
 
 
@@ -232,9 +314,20 @@ button:active {
 }
 
 
-/* -----------------------------
+/* =============================
+   PAUSE
+============================= */
+
+.pause-icon {
+    font-size: 65px;
+
+    margin-bottom: 8px;
+}
+
+
+/* =============================
    GAME OVER
------------------------------ */
+============================= */
 
 .game-over-icon {
     font-size: 65px;
@@ -253,36 +346,44 @@ button:active {
     color: #facc15;
 
     text-shadow:
-        0 0 20px rgba(250, 204, 21, 0.4);
+        0 0 20px
+        rgba(250, 204, 21, 0.4);
 }
 
 
 .results {
     display: flex;
 
-    gap: 20px;
+    gap: 8px;
 
     margin-bottom: 25px;
+
+    justify-content: center;
 }
 
 
 .results div {
-    background: rgba(255, 255, 255, 0.08);
+    background:
+        rgba(255, 255, 255, 0.08);
 
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.1);
 
     border-radius: 12px;
 
-    padding: 12px 20px;
+    padding: 10px 12px;
 
-    min-width: 110px;
+    min-width: 85px;
+
+    font-size: 12px;
 }
 
 
 .results strong {
     display: block;
 
-    font-size: 22px;
+    font-size: 20px;
 
     margin-top: 5px;
 
@@ -290,9 +391,9 @@ button:active {
 }
 
 
-/* -----------------------------
+/* =============================
    POWER MESSAGE
------------------------------ */
+============================= */
 
 #powerMessage {
     position: absolute;
@@ -300,9 +401,10 @@ button:active {
     top: 75px;
     left: 50%;
 
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
-    z-index: 7;
+    z-index: 25;
 
     pointer-events: none;
 
@@ -318,8 +420,8 @@ button:active {
         0 2px 5px black;
 
     transition:
-        opacity 0.2s,
-        transform 0.2s;
+        opacity 0.15s,
+        transform 0.15s;
 }
 
 
@@ -332,46 +434,86 @@ button:active {
 }
 
 
-/* -----------------------------
+/* =============================
+   COMBO
+============================= */
+
+#comboDisplay {
+    position: absolute;
+
+    top: 68px;
+    right: 12px;
+
+    z-index: 15;
+
+    pointer-events: none;
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+    opacity: 0;
+
+    transform: scale(0.8);
+
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
+}
+
+
+#comboDisplay.show {
+    opacity: 1;
+
+    transform: scale(1);
+}
+
+
+/* =============================
    POWER STATUS
------------------------------ */
+============================= */
 
 .power-status {
     position: absolute;
 
     left: 50%;
+
     bottom: 95px;
 
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
     display: flex;
 
-    gap: 8px;
+    gap: 6px;
 
-    z-index: 6;
+    z-index: 15;
 
     pointer-events: none;
 }
 
 
 .status {
-    padding: 7px 12px;
+    padding: 7px 10px;
 
     border-radius: 20px;
 
-    background: rgba(0, 0, 0, 0.7);
+    background:
+        rgba(0, 0, 0, 0.7);
 
-    font-size: 12px;
+    font-size: 11px;
 
     font-weight: bold;
 
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.15);
 }
 
 
-/* -----------------------------
+/* =============================
    MOBILE CONTROLS
------------------------------ */
+============================= */
 
 .mobile-controls {
     position: absolute;
@@ -383,11 +525,12 @@ button:active {
 
     display: none;
 
-    justify-content: space-between;
+    justify-content:
+        space-between;
 
     padding: 0 25px;
 
-    z-index: 8;
+    z-index: 20;
 
     pointer-events: none;
 }
@@ -411,26 +554,30 @@ button:active {
 }
 
 
-/* -----------------------------
-   ANIMATIONS
------------------------------ */
+/* =============================
+   ANIMATION
+============================= */
 
 @keyframes coinFloat {
 
     0%,
     100% {
-        transform: translateY(0) rotate(-5deg);
+        transform:
+            translateY(0)
+            rotate(-5deg);
     }
 
     50% {
-        transform: translateY(-10px) rotate(5deg);
+        transform:
+            translateY(-10px)
+            rotate(5deg);
     }
 }
 
 
-/* -----------------------------
+/* =============================
    MOBILE
------------------------------ */
+============================= */
 
 @media (max-width: 600px) {
 
@@ -448,6 +595,13 @@ button:active {
         min-height: 50px;
     }
 
+    .pause-button {
+        width: 30px;
+        height: 30px;
+
+        font-size: 14px;
+    }
+
     .screen h1 {
         font-size: 38px;
     }
@@ -455,17 +609,34 @@ button:active {
     .logo {
         font-size: 55px;
     }
+
+    .feature-list span {
+        font-size: 11px;
+    }
+
+    .results {
+        gap: 5px;
+    }
+
+    .results div {
+        min-width: 78px;
+
+        padding:
+            9px 8px;
+    }
 }
 
 
-/* Very small screens */
+/* =============================
+   VERY SMALL SCREENS
+============================= */
 
 @media (max-height: 600px) {
 
     .screen {
         justify-content: flex-start;
 
-        padding-top: 90px;
+        padding-top: 75px;
     }
 
     .logo {
@@ -477,6 +648,15 @@ button:active {
     }
 
     .screen p {
+        margin-bottom: 10px;
+    }
+
+    .feature-list {
         margin-bottom: 12px;
     }
+
+    .power-status {
+        bottom: 85px;
+    }
 }
+```
