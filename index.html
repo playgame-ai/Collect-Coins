@@ -1,10 +1,20 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-    <title>Coin Rush - Version 2</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no"
+    >
+
+    <meta
+        name="description"
+        content="Coin Rush Version 3 - Collect coins, avoid obstacles, use power-ups and beat your high score!"
+    >
+
+    <title>Coin Rush - Version 3</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -17,18 +27,15 @@
     <div class="top-bar">
 
         <div>
-            💰 Coins:
-            <span id="coinDisplay">0</span>
+            🪙 <span id="coinDisplay">0</span>
         </div>
 
         <div>
-            🏆 Score:
-            <span id="scoreDisplay">0</span>
+            🏆 <span id="scoreDisplay">0</span>
         </div>
 
         <div>
-            ⭐ Best:
-            <span id="bestDisplay">0</span>
+            ⭐ <span id="bestDisplay">0</span>
         </div>
 
         <div>
@@ -39,10 +46,18 @@
             🔥 Lv.<span id="levelDisplay">1</span>
         </div>
 
+        <button
+            id="pauseButton"
+            class="pause-button"
+            aria-label="Pause game"
+        >
+            ⏸
+        </button>
+
     </div>
 
 
-    <!-- GAME -->
+    <!-- GAME CANVAS -->
     <canvas id="gameCanvas"></canvas>
 
 
@@ -53,13 +68,21 @@
 
         <h1>COIN RUSH</h1>
 
-        <div class="version">VERSION 2</div>
+        <div class="version">
+            VERSION 3
+        </div>
 
-        <p>
+        <p class="intro-text">
             Collect coins.<br>
             Avoid obstacles.<br>
-            Grab power-ups!
+            Grab powerful upgrades!
         </p>
+
+        <div class="feature-list">
+            <span>💎 Golden Coins</span>
+            <span>🧲 Magnet</span>
+            <span>🔥 Combos</span>
+        </div>
 
         <button id="startButton">
             START GAME
@@ -76,6 +99,26 @@
     </div>
 
 
+    <!-- PAUSE SCREEN -->
+    <div id="pauseScreen" class="screen hidden">
+
+        <div class="pause-icon">
+            ⏸️
+        </div>
+
+        <h1>PAUSED</h1>
+
+        <p>
+            Take a break and come back!
+        </p>
+
+        <button id="resumeButton">
+            RESUME
+        </button>
+
+    </div>
+
+
     <!-- GAME OVER -->
     <div id="gameOverScreen" class="screen hidden">
 
@@ -87,7 +130,10 @@
 
         <p>Your Score</p>
 
-        <div class="final-score" id="finalScore">
+        <div
+            class="final-score"
+            id="finalScore"
+        >
             0
         </div>
 
@@ -95,12 +141,23 @@
 
             <div>
                 🪙 Coins
-                <strong id="finalCoins">0</strong>
+                <strong id="finalCoins">
+                    0
+                </strong>
             </div>
 
             <div>
                 🏆 Best
-                <strong id="finalBest">0</strong>
+                <strong id="finalBest">
+                    0
+                </strong>
+            </div>
+
+            <div>
+                🔥 Combo
+                <strong id="finalCombo">
+                    0
+                </strong>
             </div>
 
         </div>
@@ -112,8 +169,41 @@
     </div>
 
 
-    <!-- POWER UP MESSAGE -->
+    <!-- POWER MESSAGE -->
     <div id="powerMessage"></div>
+
+
+    <!-- COMBO -->
+    <div id="comboDisplay">
+        COMBO x1
+    </div>
+
+
+    <!-- POWER STATUS -->
+    <div class="power-status">
+
+        <div
+            id="shieldStatus"
+            class="status hidden"
+        >
+            🛡️ SHIELD
+        </div>
+
+        <div
+            id="boostStatus"
+            class="status hidden"
+        >
+            ⚡ BOOST
+        </div>
+
+        <div
+            id="magnetStatus"
+            class="status hidden"
+        >
+            🧲 MAGNET
+        </div>
+
+    </div>
 
 
     <!-- MOBILE CONTROLS -->
@@ -129,20 +219,6 @@
 
     </div>
 
-
-    <!-- POWER-UP STATUS -->
-    <div class="power-status">
-
-        <div id="shieldStatus" class="status hidden">
-            🛡️ SHIELD
-        </div>
-
-        <div id="boostStatus" class="status hidden">
-            ⚡ BOOST
-        </div>
-
-    </div>
-
 </div>
 
 
@@ -150,3 +226,4 @@
 
 </body>
 </html>
+```
