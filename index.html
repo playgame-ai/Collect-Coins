@@ -8,194 +8,379 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
 
-    <title>Coin Rush - Version 3</title>
-
     <meta
         name="description"
-        content="Coin Rush is an original endless arcade game where you collect coins, avoid obstacles and use powerful boosts."
+        content="Coin Rush - an original browser coin collecting game."
     >
+
+    <title>Coin Rush - Version 5</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="game-wrapper">
+    <div class="game-wrapper">
 
-    <!-- GAME HEADER -->
+        <!-- =========================
+             TOP HUD
+        ========================== -->
 
-    <div class="top-bar">
+        <div class="top-bar">
 
-        <div class="stat">
-            <span class="stat-label">SCORE</span>
-            <span id="score">0</span>
-        </div>
-
-        <div class="stat">
-            <span class="stat-label">COINS</span>
-            <span id="coins">0</span>
-        </div>
-
-        <div class="stat">
-            <span class="stat-label">BEST</span>
-            <span id="best">0</span>
-        </div>
-
-        <button id="pauseBtn" class="pause-button">
-            II
-        </button>
-
-    </div>
-
-
-    <!-- GAME AREA -->
-
-    <div class="canvas-container">
-
-        <canvas id="gameCanvas"></canvas>
-
-        <!-- Start Screen -->
-
-        <div id="startScreen" class="screen">
-
-            <div class="logo">
-                COIN
-                <span>RUSH</span>
+            <div class="stat-box">
+                <span class="stat-label">SCORE</span>
+                <span id="score">0</span>
             </div>
 
-            <p class="version">
-                VERSION 3
-            </p>
-
-            <p class="description">
-                Collect coins. Avoid obstacles. Survive as long as possible.
-            </p>
-
-            <div class="feature-row">
-
-                <div class="feature">
-                    <span>🪙</span>
-                    <small>COINS</small>
-                </div>
-
-                <div class="feature">
-                    <span>⚡</span>
-                    <small>BOOST</small>
-                </div>
-
-                <div class="feature">
-                    <span>🛡️</span>
-                    <small>SHIELD</small>
-                </div>
-
+            <div class="stat-box">
+                <span class="stat-label">COINS</span>
+                <span id="coins">0</span>
             </div>
 
-            <button id="startBtn" class="main-button">
-                PLAY GAME
-            </button>
-
-            <p class="controls-text">
-                Desktop: ← → or A D<br>
-                Mobile: touch left/right side
-            </p>
-
-        </div>
-
-
-        <!-- Pause Screen -->
-
-        <div id="pauseScreen" class="screen hidden">
-
-            <div class="pause-title">
-                GAME PAUSED
+            <div class="stat-box">
+                <span class="stat-label">BEST</span>
+                <span id="best">0</span>
             </div>
 
-            <button id="resumeBtn" class="main-button">
-                RESUME
+            <button id="pauseBtn" class="small-button">
+                II
             </button>
 
         </div>
 
 
-        <!-- Game Over Screen -->
+        <!-- =========================
+             GAME AREA
+        ========================== -->
 
-        <div id="gameOverScreen" class="screen hidden">
+        <div class="canvas-container">
 
-            <div class="game-over-icon">
-                ★
-            </div>
+            <canvas id="gameCanvas"></canvas>
 
-            <h1>
-                GAME OVER!
-            </h1>
 
-            <p class="your-score">
-                Your Score
-            </p>
+            <!-- =========================
+                 START SCREEN
+            ========================== -->
 
-            <div id="finalScore" class="final-score">
-                0
-            </div>
+            <div id="startScreen" class="screen">
 
-            <div class="result-grid">
+                <div class="screen-card">
 
-                <div class="result-box">
-                    <span>🪙</span>
-                    <small>COINS</small>
-                    <strong id="finalCoins">0</strong>
+                    <div class="game-logo">
+                        COIN RUSH
+                    </div>
+
+                    <div class="version">
+                        VERSION 5
+                    </div>
+
+                    <p class="subtitle">
+                        Collect coins. Avoid obstacles. Beat your best score!
+                    </p>
+
+                    <div class="feature-row">
+
+                        <div class="feature">
+                            <span>🪙</span>
+                            <small>COINS</small>
+                        </div>
+
+                        <div class="feature">
+                            <span>⚡</span>
+                            <small>BOOST</small>
+                        </div>
+
+                        <div class="feature">
+                            <span>🛡️</span>
+                            <small>SHIELD</small>
+                        </div>
+
+                        <div class="feature">
+                            <span>🧲</span>
+                            <small>MAGNET</small>
+                        </div>
+
+                    </div>
+
+                    <button id="startBtn" class="main-button">
+                        START GAME
+                    </button>
+
+                    <button id="shopBtnStart" class="secondary-button">
+                        SHOP
+                    </button>
+
+                    <div class="controls">
+
+                        <strong>CONTROLS</strong>
+
+                        <p>
+                            W / ↑ = Forward
+                        </p>
+
+                        <p>
+                            S / ↓ = Backward
+                        </p>
+
+                        <p>
+                            A / ← = Left
+                        </p>
+
+                        <p>
+                            D / → = Right
+                        </p>
+
+                        <p>
+                            B = Boost &nbsp; | &nbsp;
+                            Q = Shield &nbsp; | &nbsp;
+                            M = Magnet
+                        </p>
+
+                    </div>
+
                 </div>
 
-                <div class="result-box">
-                    <span>🏆</span>
-                    <small>BEST</small>
-                    <strong id="finalBest">0</strong>
-                </div>
+            </div>
 
-                <div class="result-box">
-                    <span>🔥</span>
-                    <small>COMBO</small>
-                    <strong id="finalCombo">0</strong>
+
+            <!-- =========================
+                 PAUSE SCREEN
+            ========================== -->
+
+            <div id="pauseScreen" class="screen hidden">
+
+                <div class="screen-card">
+
+                    <h1>GAME PAUSED</h1>
+
+                    <button id="resumeBtn" class="main-button">
+                        RESUME
+                    </button>
+
+                    <button id="pauseShopBtn" class="secondary-button">
+                        SHOP
+                    </button>
+
                 </div>
 
             </div>
 
-            <button id="restartBtn" class="main-button">
-                PLAY AGAIN
-            </button>
+
+            <!-- =========================
+                 GAME OVER SCREEN
+            ========================== -->
+
+            <div id="gameOverScreen" class="screen hidden">
+
+                <div class="screen-card">
+
+                    <h1>GAME OVER</h1>
+
+                    <div class="game-over-stats">
+
+                        <p>
+                            Final Score:
+                            <strong id="finalScore">0</strong>
+                        </p>
+
+                        <p>
+                            Coins Collected:
+                            <strong id="finalCoins">0</strong>
+                        </p>
+
+                        <p>
+                            Best Score:
+                            <strong id="finalBest">0</strong>
+                        </p>
+
+                        <p>
+                            Best Combo:
+                            <strong id="finalCombo">0</strong>
+                        </p>
+
+                    </div>
+
+                    <button id="restartBtn" class="main-button">
+                        PLAY AGAIN
+                    </button>
+
+                    <button id="gameOverShopBtn" class="secondary-button">
+                        SHOP
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 SHOP
+            ========================== -->
+
+            <div id="shopScreen" class="screen hidden">
+
+                <div class="shop-card">
+
+                    <div class="shop-header">
+
+                        <h1>SHOP</h1>
+
+                        <button id="closeShopBtn" class="close-button">
+                            X
+                        </button>
+
+                    </div>
+
+                    <div class="shop-coins">
+                        🪙 <span id="shopCoins">0</span>
+                    </div>
+
+
+                    <!-- SKINS -->
+
+                    <h2>CAR SKINS</h2>
+
+                    <div class="skin-grid">
+
+                        <div
+                            class="skin-card selected"
+                            data-skin="blue"
+                        >
+                            <div class="skin-preview blue-preview"></div>
+                            <strong>BLUE</strong>
+                            <span>FREE</span>
+                        </div>
+
+                        <div
+                            class="skin-card"
+                            data-skin="green"
+                        >
+                            <div class="skin-preview green-preview"></div>
+                            <strong>GREEN</strong>
+                            <span>100 🪙</span>
+                        </div>
+
+                        <div
+                            class="skin-card"
+                            data-skin="orange"
+                        >
+                            <div class="skin-preview orange-preview"></div>
+                            <strong>ORANGE</strong>
+                            <span>200 🪙</span>
+                        </div>
+
+                        <div
+                            class="skin-card"
+                            data-skin="purple"
+                        >
+                            <div class="skin-preview purple-preview"></div>
+                            <strong>PURPLE</strong>
+                            <span>300 🪙</span>
+                        </div>
+
+                    </div>
+
+
+                    <!-- UPGRADES -->
+
+                    <h2>UPGRADES</h2>
+
+                    <div class="upgrade-list">
+
+                        <div class="upgrade-card">
+
+                            <div>
+                                <strong>⚡ Boost</strong>
+
+                                <p>
+                                    Level:
+                                    <span id="boostUpgradeLevel">
+                                        0
+                                    </span>
+                                </p>
+                            </div>
+
+                            <button id="buyBoostUpgrade">
+                                200 🪙
+                            </button>
+
+                        </div>
+
+
+                        <div class="upgrade-card">
+
+                            <div>
+                                <strong>🧲 Magnet</strong>
+
+                                <p>
+                                    Level:
+                                    <span id="magnetUpgradeLevel">
+                                        0
+                                    </span>
+                                </p>
+                            </div>
+
+                            <button id="buyMagnetUpgrade">
+                                200 🪙
+                            </button>
+
+                        </div>
+
+
+                        <div class="upgrade-card">
+
+                            <div>
+                                <strong>🪙 Coin Bonus</strong>
+
+                                <p>
+                                    Level:
+                                    <span id="coinUpgradeLevel">
+                                        0
+                                    </span>
+                                </p>
+                            </div>
+
+                            <button id="buyCoinUpgrade">
+                                200 🪙
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACHIEVEMENTS -->
+
+                    <h2>ACHIEVEMENTS</h2>
+
+                    <div id="achievementList" class="achievement-list">
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
-    </div>
 
-
-    <!-- BOTTOM CONTROLS -->
-
-    <div class="bottom-panel">
-
-        <div class="health-section">
-
-            <div class="panel-title">
-                LIVES
-            </div>
-
-            <div id="hearts">
-                ❤️ ❤️ ❤️
-            </div>
-
-        </div>
-
+        <!-- =========================
+             POWER SECTION
+        ========================== -->
 
         <div class="power-section">
 
+            <!-- BOOST -->
+
             <button id="boostBtn" class="power-button boost">
 
-                <span class="power-icon">
+                <div class="power-icon">
                     ⚡
-                </span>
+                </div>
 
-                <span>
+                <div class="power-name">
                     BOOST
-                </span>
+                </div>
 
                 <div class="power-bar">
                     <div id="boostBar"></div>
@@ -204,15 +389,17 @@
             </button>
 
 
+            <!-- SHIELD -->
+
             <button id="shieldBtn" class="power-button shield">
 
-                <span class="power-icon">
+                <div class="power-icon">
                     🛡️
-                </span>
+                </div>
 
-                <span>
+                <div class="power-name">
                     SHIELD
-                </span>
+                </div>
 
                 <div class="power-bar">
                     <div id="shieldBar"></div>
@@ -220,13 +407,46 @@
 
             </button>
 
+
+            <!-- MAGNET -->
+
+            <button id="magnetBtn" class="power-button magnet">
+
+                <div class="power-icon">
+                    🧲
+                </div>
+
+                <div class="power-name">
+                    MAGNET
+                </div>
+
+                <div class="power-bar">
+                    <div id="magnetBar"></div>
+                </div>
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================
+             LIVES
+        ========================== -->
+
+        <div class="lives-container">
+
+            <span>Lives:</span>
+
+            <span id="hearts">
+                ❤️ ❤️ ❤️
+            </span>
+
         </div>
 
     </div>
 
-</div>
 
-<script src="game.js"></script>
+    <script src="game.js"></script>
 
 </body>
 </html>
