@@ -1,271 +1,592 @@
 "use strict";
 
-/*
-===========================================================
-COIN RUSH - VERSION 3
-===========================================================
 
-Original game code.
-No external libraries.
-No external images.
-No external music.
-No copyrighted characters/assets.
-
-===========================================================
-*/
+/* =========================================================
+   COIN RUSH - VERSION 5
+   Original Canvas Game
+   No external libraries
+   No external images
+   No external music
+========================================================= */
 
 
-// ========================================================
-// CANVAS
-// ========================================================
+/* =========================================================
+   CANVAS
+========================================================= */
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+let canvasWidth = 0;
+let canvasHeight = 0;
+let deviceScale = 1;
 
-// ========================================================
-// UI
-// ========================================================
 
-const scoreEl = document.getElementById("score");
-const coinsEl = document.getElementById("coins");
-const bestEl = document.getElementById("best");
+/* =========================================================
+   UI ELEMENTS
+========================================================= */
 
-const finalScoreEl = document.getElementById("finalScore");
-const finalCoinsEl = document.getElementById("finalCoins");
-const finalBestEl = document.getElementById("finalBest");
-const finalComboEl = document.getElementById("finalCombo");
+const scoreElement = document.getElementById("score");
+const coinsElement = document.getElementById("coins");
+const bestElement = document.getElementById("best");
 
-const heartsEl = document.getElementById("hearts");
-
-const boostBtn = document.getElementById("boostBtn");
-const shieldBtn = document.getElementById("shieldBtn");
-
-const boostBar = document.getElementById("boostBar");
-const shieldBar = document.getElementById("shieldBar");
+const pauseBtn = document.getElementById("pauseBtn");
 
 const startScreen = document.getElementById("startScreen");
 const pauseScreen = document.getElementById("pauseScreen");
 const gameOverScreen = document.getElementById("gameOverScreen");
+const shopScreen = document.getElementById("shopScreen");
 
 const startBtn = document.getElementById("startBtn");
+const resumeBtn = document.getElementById("resumeBtn");
 const restartBtn = document.getElementById("restartBtn");
 
-const pauseBtn = document.getElementById("pauseBtn");
-const resumeBtn = document.getElementById("resumeBtn");
+const shopBtnStart = document.getElementById("shopBtnStart");
+const pauseShopBtn = document.getElementById("pauseShopBtn");
+const gameOverShopBtn = document.getElementById("gameOverShopBtn");
+
+const closeShopBtn = document.getElementById("closeShopBtn");
+
+const finalScore = document.getElementById("finalScore");
+const finalCoins = document.getElementById("finalCoins");
+const finalBest = document.getElementById("finalBest");
+const finalCombo = document.getElementById("finalCombo");
+
+const shopCoins = document.getElementById("shopCoins");
+
+const heartsElement = document.getElementById("hearts");
+
+const boostBtn = document.getElementById("boostBtn");
+const shieldBtn = document.getElementById("shieldBtn");
+const magnetBtn = document.getElementById("magnetBtn");
+
+const boostBar = document.getElementById("boostBar");
+const shieldBar = document.getElementById("shieldBar");
+const magnetBar = document.getElementById("magnetBar");
+
+const buyBoostUpgrade =
+    document.getElementById("buyBoostUpgrade");
+
+const buyMagnetUpgrade =
+    document.getElementById("buyMagnetUpgrade");
+
+const buyCoinUpgrade =
+    document.getElementById("buyCoinUpgrade");
+
+const boostUpgradeLevel =
+    document.getElementById("boostUpgradeLevel");
+
+const magnetUpgradeLevel =
+    document.getElementById("magnetUpgradeLevel");
+
+const coinUpgradeLevel =
+    document.getElementById("coinUpgradeLevel");
+
+const achievementList =
+    document.getElementById("achievementList");
 
 
-// ========================================================
-// GAME VARIABLES
-// ========================================================
-
-let width = 0;
-let height = 0;
-
-let animationId = null;
-
-let gameRunning = false;
-let paused = false;
-
-let lastTime = 0;
-
-
-// ========================================================
-// PLAYER
-// ========================================================
-
-const player = {
-
-    x: 0,
-    y: 0,
-
-    width: 38,
-    height: 50,
-
-    speed: 280,
-
-    targetX: 0,
-
-    invincibleTimer: 0,
-
-    shieldTimer: 0,
-
-    boostTimer: 0
-};
-
-
-// ========================================================
-// GAME STATE
-// ========================================================
-
-let score = 0;
-let coinsCollected = 0;
-
-let bestScore =
-    Number(localStorage.getItem("coinRushBest")) || 0;
+/* =========================================================
+   SAVED DATA
+========================================================= */
 
 let totalCoins =
-    Number(localStorage.getItem("coinRushCoins")) || 0;
+    Number(
+        localStorage.getItem("coinRushCoinsV5") || 0
+    );
+
+let bestScore =
+    Number(
+        localStorage.getItem("coinRushBestV5") || 0
+    );
+
+let selectedSkin =
+    localStorage.getItem(
+        "coinRushSkinV5"
+    ) || "blue";
+
+let ownedSkins =
+    JSON.parse(
+        localStorage.getItem(
+            "coinRushSkinsV5"
+        ) || '["blue"]'
+    );
+
+let boostUpgrade =
+    Number(
+        localStorage.getItem(
+            "coinRushBoostUpgradeV5"
+        ) || 0
+    );
+
+let magnetUpgrade =
+    Number(
+        localStorage.getItem(
+            "coinRushMagnetUpgradeV5"
+        ) || 0
+    );
+
+let coinUpgrade =
+    Number(
+        localStorage.getItem(
+            "coinRushCoinUpgradeV5"
+        ) || 0
+    );
+
+let achievementData =
+    JSON.parse(
+        localStorage.getItem(
+            "coinRushAchievementsV5"
+        ) || "{}"
+    );
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let gameRunning = false;
+let gamePaused = false;
+
+let score = 0;
+let runCoins = 0;
 
 let lives = 3;
 
 let combo = 0;
+let bestCombo = 0;
 let comboTimer = 0;
 
-let distance = 0;
+let gameTime = 0;
+
+let spawnTimer = 0;
+let obstacleTimer = 0;
+
+let lastTime = 0;
 
 
-// ========================================================
-// SPEED
-// ========================================================
-
-// IMPORTANT:
-// The game starts deliberately slow.
-
-const BASE_SPEED = 95;
-
-let roadSpeed = BASE_SPEED;
-
-const MAX_SPEED = 240;
-
-
-// ========================================================
-// POWER
-// ========================================================
-
-let boostEnergy = 0;
-let shieldEnergy = 0;
+/* =========================================================
+   POWER SETTINGS
+========================================================= */
 
 const MAX_POWER = 100;
 
+let boostEnergy = 100;
+let shieldEnergy = 100;
+let magnetEnergy = 100;
+
 let boostActive = false;
+let magnetActive = false;
 
 
-// ========================================================
-// OBJECT ARRAYS
-// ========================================================
+/* =========================================================
+   POWER TIMERS
+========================================================= */
+
+let boostTimer = 0;
+let shieldTimer = 0;
+let magnetTimer = 0;
+
+
+/* =========================================================
+   MAGNET SETTINGS
+========================================================= */
+
+const BASE_MAGNET_DURATION = 5;
+
+const MAGNET_DURATION_UPGRADE = 1;
+
+const BASE_MAGNET_RADIUS = 150;
+
+const MAGNET_RADIUS_UPGRADE = 35;
+
+
+function getMagnetDuration() {
+
+    return (
+        BASE_MAGNET_DURATION +
+        magnetUpgrade *
+        MAGNET_DURATION_UPGRADE
+    );
+}
+
+
+function getMagnetRadius() {
+
+    return (
+        BASE_MAGNET_RADIUS +
+        magnetUpgrade *
+        MAGNET_RADIUS_UPGRADE
+    );
+}
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player = {
+
+    width: 38,
+
+    height: 50,
+
+    x: 0,
+
+    y: 0,
+
+    targetX: 0,
+
+    targetY: 0,
+
+    moveSpeed: 330,
+
+    followSpeed: 12,
+
+    invincibleTimer: 0
+
+};
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+const keys = {
+
+    left: false,
+
+    right: false,
+
+    forward: false,
+
+    backward: false
+
+};
+
+
+/* =========================================================
+   GAME OBJECTS
+========================================================= */
 
 let coins = [];
+
 let obstacles = [];
+
 let particles = [];
+
 let stars = [];
 
 
-// ========================================================
-// SPAWN TIMERS
-// ========================================================
+/* =========================================================
+   SKINS
+========================================================= */
 
-let coinTimer = 0;
-let obstacleTimer = 0;
+const skins = {
+
+    blue: {
+        main: "#38bdf8",
+        dark: "#1d4ed8",
+        light: "#bae6fd"
+    },
+
+    green: {
+        main: "#4ade80",
+        dark: "#15803d",
+        light: "#bbf7d0"
+    },
+
+    orange: {
+        main: "#fb923c",
+        dark: "#ea580c",
+        light: "#fed7aa"
+    },
+
+    purple: {
+        main: "#c084fc",
+        dark: "#7e22ce",
+        light: "#e9d5ff"
+    }
+
+};
 
 
-// ========================================================
-// AUDIO
-// ========================================================
+/* =========================================================
+   ACHIEVEMENTS
+========================================================= */
+
+const achievements = [
+
+    {
+        id: "firstCoin",
+        title: "First Coin",
+        description: "Collect your first coin.",
+        icon: "🪙"
+    },
+
+    {
+        id: "coins100",
+        title: "Coin Collector",
+        description: "Collect 100 coins.",
+        icon: "💰"
+    },
+
+    {
+        id: "score1000",
+        title: "Rising Star",
+        description: "Reach 1,000 score.",
+        icon: "⭐"
+    },
+
+    {
+        id: "combo10",
+        title: "Combo Master",
+        description: "Reach a 10x combo.",
+        icon: "🔥"
+    },
+
+    {
+        id: "magnet",
+        title: "Magnetic",
+        description: "Use the coin magnet.",
+        icon: "🧲"
+    },
+
+    {
+        id: "survivor",
+        title: "Survivor",
+        description: "Survive for 60 seconds.",
+        icon: "🏆"
+    }
+
+];
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
 
 let audioContext = null;
 
 
-function initializeAudio() {
+function initAudio() {
 
     if (!audioContext) {
 
-        audioContext =
-            new (window.AudioContext ||
-                window.webkitAudioContext)();
+        try {
+
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
+
+        } catch (error) {
+
+            audioContext = null;
+
+        }
+
     }
 
-    if (audioContext.state === "suspended") {
-
-        audioContext.resume();
-    }
 }
 
 
 function playSound(
-    frequency,
-    duration,
+    frequency = 440,
+    duration = 0.08,
     type = "sine",
-    volume = 0.05
+    volume = 0.04
 ) {
 
-    if (!audioContext) {
-        return;
+    if (!audioContext) return;
+
+    try {
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        oscillator.type = type;
+
+        oscillator.frequency.value =
+            frequency;
+
+        gain.gain.value = volume;
+
+        oscillator.connect(gain);
+
+        gain.connect(audioContext.destination);
+
+        oscillator.start();
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + duration
+        );
+
+        oscillator.stop(
+            audioContext.currentTime + duration
+        );
+
+    } catch (error) {
+
+        // Audio is optional.
+
     }
 
-    const oscillator =
-        audioContext.createOscillator();
-
-    const gain =
-        audioContext.createGain();
-
-    oscillator.type = type;
-
-    oscillator.frequency.value =
-        frequency;
-
-    gain.gain.setValueAtTime(
-        volume,
-        audioContext.currentTime
-    );
-
-    gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        audioContext.currentTime + duration
-    );
-
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-
-    oscillator.start();
-
-    oscillator.stop(
-        audioContext.currentTime + duration
-    );
 }
 
 
-// ========================================================
-// RESIZE
-// ========================================================
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function clamp(value, min, max) {
+
+    return Math.max(
+        min,
+        Math.min(max, value)
+    );
+
+}
+
+
+function random(min, max) {
+
+    return (
+        Math.random() *
+        (max - min) +
+        min
+    );
+
+}
+
+
+function distance(
+    x1,
+    y1,
+    x2,
+    y2
+) {
+
+    return Math.hypot(
+        x2 - x1,
+        y2 - y1
+    );
+
+}
+
+
+/* =========================================================
+   ROAD
+========================================================= */
+
+function getRoadWidth() {
+
+    return Math.min(
+        canvasWidth * 0.82,
+        620
+    );
+
+}
+
+
+function getRoadHeight() {
+
+    return canvasHeight * 0.92;
+
+}
+
+
+function getRoadLeft() {
+
+    return (
+        canvasWidth / 2 -
+        getRoadWidth() / 2
+    );
+
+}
+
+
+function getRoadRight() {
+
+    return (
+        canvasWidth / 2 +
+        getRoadWidth() / 2
+    );
+
+}
+
+
+function getRoadTop() {
+
+    return (
+        canvasHeight -
+        getRoadHeight()
+    ) / 2;
+
+}
+
+
+function getRoadBottom() {
+
+    return (
+        canvasHeight +
+        getRoadHeight()
+    ) / 2;
+
+}
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
 
 function resizeCanvas() {
 
     const rect =
         canvas.getBoundingClientRect();
 
-    const dpr =
-        Math.min(window.devicePixelRatio || 1, 2);
+    canvasWidth = rect.width;
 
-    width = rect.width;
-    height = rect.height;
+    canvasHeight = rect.height;
+
+    deviceScale =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
 
     canvas.width =
-        Math.floor(width * dpr);
+        Math.floor(
+            canvasWidth *
+            deviceScale
+        );
 
     canvas.height =
-        Math.floor(height * dpr);
+        Math.floor(
+            canvasHeight *
+            deviceScale
+        );
 
     ctx.setTransform(
-        dpr,
+        deviceScale,
         0,
         0,
-        dpr,
+        deviceScale,
         0,
         0
     );
 
-    if (!gameRunning) {
+    if (player.x === 0 && player.y === 0) {
 
-        player.x =
-            width / 2;
+        resetPlayerPosition();
 
-        player.targetX =
-            width / 2;
-
-        player.y =
-            height - 100;
     }
+
 }
 
 
@@ -275,190 +596,140 @@ window.addEventListener(
 );
 
 
-// ========================================================
-// BACKGROUND STARS
-// ========================================================
+/* =========================================================
+   PLAYER POSITION
+========================================================= */
 
-function createStars() {
+function resetPlayerPosition() {
 
-    stars = [];
+    player.x =
+        canvasWidth / 2 -
+        player.width / 2;
 
-    for (let i = 0; i < 55; i++) {
+    player.y =
+        canvasHeight / 2 -
+        player.height / 2;
 
-        stars.push({
+    player.targetX = player.x;
 
-            x: Math.random() * width,
+    player.targetY = player.y;
 
-            y: Math.random() * height,
-
-            size:
-                Math.random() * 2 + 0.5,
-
-            speed:
-                Math.random() * 20 + 8,
-
-            alpha:
-                Math.random() * 0.5 + 0.2
-        });
-    }
 }
 
 
-// ========================================================
-// RESET GAME
-// ========================================================
+/* =========================================================
+   RESET GAME
+========================================================= */
 
 function resetGame() {
 
     score = 0;
-    coinsCollected = 0;
+
+    runCoins = 0;
 
     lives = 3;
 
     combo = 0;
+
+    bestCombo = 0;
+
     comboTimer = 0;
 
-    distance = 0;
+    gameTime = 0;
 
-    roadSpeed = BASE_SPEED;
+    spawnTimer = 0;
 
-    boostEnergy = 0;
-    shieldEnergy = 0;
+    obstacleTimer = 0;
+
+    boostEnergy = 100;
+
+    shieldEnergy = 100;
+
+    magnetEnergy = 100;
 
     boostActive = false;
 
-    coinTimer = 0;
-    obstacleTimer = 0;
+    magnetActive = false;
+
+    boostTimer = 0;
+
+    shieldTimer = 0;
+
+    magnetTimer = 0;
 
     coins = [];
+
     obstacles = [];
+
     particles = [];
 
-    player.invincibleTimer = 0;
-    player.shieldTimer = 0;
-    player.boostTimer = 0;
+    createStars();
 
-    player.x =
-        width / 2;
-
-    player.targetX =
-        width / 2;
-
-    player.y =
-        height - 100;
+    resetPlayerPosition();
 
     updateUI();
+
 }
 
 
-// ========================================================
-// START GAME
-// ========================================================
+/* =========================================================
+   START GAME
+========================================================= */
 
 function startGame() {
 
-    initializeAudio();
+    initAudio();
+
+    if (
+        audioContext &&
+        audioContext.state === "suspended"
+    ) {
+
+        audioContext.resume();
+
+    }
 
     resetGame();
 
-    startScreen.classList.add("hidden");
+    gameRunning = true;
 
-    gameOverScreen.classList.add("hidden");
+    gamePaused = false;
+
+    startScreen.classList.add("hidden");
 
     pauseScreen.classList.add("hidden");
 
-    paused = false;
+    gameOverScreen.classList.add("hidden");
 
-    gameRunning = true;
-
-    lastTime =
-        performance.now();
-
-    cancelAnimationFrame(animationId);
-
-    animationId =
-        requestAnimationFrame(gameLoop);
+    shopScreen.classList.add("hidden");
 
     playSound(
         500,
         0.12,
-        "sine",
-        0.04
+        "square",
+        0.05
     );
+
+    lastTime = performance.now();
+
 }
 
 
-// ========================================================
-// GAME OVER
-// ========================================================
-
-function endGame() {
-
-    gameRunning = false;
-
-    boostActive = false;
-
-    if (score > bestScore) {
-
-        bestScore = score;
-
-        localStorage.setItem(
-            "coinRushBest",
-            bestScore
-        );
-    }
-
-    localStorage.setItem(
-        "coinRushCoins",
-        totalCoins
-    );
-
-    finalScoreEl.textContent =
-        Math.floor(score);
-
-    finalCoinsEl.textContent =
-        coinsCollected;
-
-    finalBestEl.textContent =
-        bestScore;
-
-    finalComboEl.textContent =
-        combo;
-
-    gameOverScreen.classList.remove(
-        "hidden"
-    );
-
-    playSound(
-        150,
-        0.35,
-        "sawtooth",
-        0.06
-    );
-
-    updateUI();
-}
-
-
-// ========================================================
-// PAUSE
-// ========================================================
+/* =========================================================
+   PAUSE
+========================================================= */
 
 function togglePause() {
 
-    if (!gameRunning) {
-        return;
-    }
+    if (!gameRunning) return;
 
-    paused = !paused;
+    gamePaused = !gamePaused;
 
-    if (paused) {
+    if (gamePaused) {
 
         pauseScreen.classList.remove(
             "hidden"
         );
-
-        pauseBtn.textContent = "▶";
 
     } else {
 
@@ -466,663 +737,240 @@ function togglePause() {
             "hidden"
         );
 
-        pauseBtn.textContent = "II";
+        lastTime = performance.now();
 
-        lastTime =
-            performance.now();
     }
+
 }
 
 
-// ========================================================
-// PLAYER MOVEMENT
-// ========================================================
+/* =========================================================
+   GAME OVER
+========================================================= */
 
-function movePlayer(direction) {
+function endGame() {
 
-    if (!gameRunning || paused) {
-        return;
+    gameRunning = false;
+
+    gamePaused = false;
+
+    boostActive = false;
+
+    magnetActive = false;
+
+    if (score > bestScore) {
+
+        bestScore = Math.floor(score);
+
+        localStorage.setItem(
+            "coinRushBestV5",
+            bestScore
+        );
+
     }
 
-    const movement =
-        width * 0.17;
+    finalScore.textContent =
+        Math.floor(score);
 
-    player.targetX +=
-        direction * movement;
+    finalCoins.textContent =
+        runCoins;
 
-    const margin =
-        player.width / 2 + 10;
+    finalBest.textContent =
+        bestScore;
+
+    finalCombo.textContent =
+        bestCombo;
+
+    gameOverScreen.classList.remove(
+        "hidden"
+    );
+
+    updateUI();
+
+    playSound(
+        120,
+        0.4,
+        "sawtooth",
+        0.06
+    );
+
+}
+
+
+/* =========================================================
+   PLAYER MOVEMENT
+========================================================= */
+
+function updatePlayer(dt) {
+
+    let horizontal = 0;
+
+    let vertical = 0;
+
+
+    if (keys.left) {
+
+        horizontal -= 1;
+
+    }
+
+
+    if (keys.right) {
+
+        horizontal += 1;
+
+    }
+
+
+    if (keys.forward) {
+
+        vertical -= 1;
+
+    }
+
+
+    if (keys.backward) {
+
+        vertical += 1;
+
+    }
+
+
+    if (
+        horizontal !== 0 ||
+        vertical !== 0
+    ) {
+
+        const length =
+            Math.hypot(
+                horizontal,
+                vertical
+            );
+
+        horizontal /= length;
+
+        vertical /= length;
+
+
+        const movementSpeed =
+            player.moveSpeed *
+            (
+                boostActive
+                    ? 1.45
+                    : 1
+            );
+
+
+        player.targetX +=
+            horizontal *
+            movementSpeed *
+            dt;
+
+
+        player.targetY +=
+            vertical *
+            movementSpeed *
+            dt;
+
+    }
+
 
     player.targetX =
-        Math.max(
-            margin,
-            Math.min(
-                width - margin,
-                player.targetX
-            )
-        );
-}
+        clamp(
+            player.targetX,
 
+            getRoadLeft() + 10,
 
-// ========================================================
-// KEYBOARD
-// ========================================================
-
-window.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (
-            event.key === "ArrowLeft" ||
-            event.key.toLowerCase() === "a"
-        ) {
-
-            event.preventDefault();
-
-            movePlayer(-1);
-        }
-
-        if (
-            event.key === "ArrowRight" ||
-            event.key.toLowerCase() === "d"
-        ) {
-
-            event.preventDefault();
-
-            movePlayer(1);
-        }
-
-        if (
-            event.key === " " ||
-            event.key.toLowerCase() === "p"
-        ) {
-
-            event.preventDefault();
-
-            togglePause();
-        }
-
-        if (
-            event.key.toLowerCase() === "b"
-        ) {
-
-            activateBoost();
-        }
-
-        if (
-            event.key.toLowerCase() === "s"
-        ) {
-
-            activateShield();
-        }
-    }
-);
-
-
-// ========================================================
-// TOUCH CONTROLS
-// ========================================================
-
-canvas.addEventListener(
-    "pointerdown",
-    function(event) {
-
-        if (!gameRunning || paused) {
-            return;
-        }
-
-        initializeAudio();
-
-        const rect =
-            canvas.getBoundingClientRect();
-
-        const touchX =
-            event.clientX - rect.left;
-
-        if (touchX < width / 2) {
-
-            movePlayer(-1);
-
-        } else {
-
-            movePlayer(1);
-        }
-    }
-);
-
-
-// ========================================================
-// BOOST
-// ========================================================
-
-function activateBoost() {
-
-    if (
-        !gameRunning ||
-        paused ||
-        boostActive ||
-        boostEnergy < 100
-    ) {
-
-        return;
-    }
-
-    boostActive = true;
-
-    player.boostTimer = 2.5;
-
-    boostEnergy = 0;
-
-    playSound(
-        700,
-        0.15,
-        "square",
-        0.05
-    );
-}
-
-
-// ========================================================
-// SHIELD
-// ========================================================
-
-function activateShield() {
-
-    if (
-        !gameRunning ||
-        paused ||
-        player.shieldTimer > 0 ||
-        shieldEnergy < 100
-    ) {
-
-        return;
-    }
-
-    player.shieldTimer = 5;
-
-    shieldEnergy = 0;
-
-    playSound(
-        400,
-        0.2,
-        "triangle",
-        0.05
-    );
-}
-
-
-// ========================================================
-// CREATE COIN
-// ========================================================
-
-function spawnCoin() {
-
-    const margin = 30;
-
-    coins.push({
-
-        x:
-            margin +
-            Math.random() *
-            (width - margin * 2),
-
-        y: -30,
-
-        radius: 12,
-
-        rotation:
-            Math.random() * Math.PI,
-
-        speed:
-            roadSpeed +
-            Math.random() * 15
-    });
-}
-
-
-// ========================================================
-// CREATE OBSTACLE
-// ========================================================
-
-function spawnObstacle() {
-
-    const obstacleWidth =
-        35 + Math.random() * 20;
-
-    const obstacleHeight =
-        35 + Math.random() * 25;
-
-    const margin = 25;
-
-    obstacles.push({
-
-        x:
-            margin +
-            Math.random() *
-            (width -
-                margin * 2 -
-                obstacleWidth),
-
-        y:
-            -obstacleHeight - 20,
-
-        width:
-            obstacleWidth,
-
-        height:
-            obstacleHeight,
-
-        speed:
-            roadSpeed +
-            Math.random() * 20,
-
-        rotation:
-            Math.random() * 0.2 - 0.1
-    });
-}
-
-
-// ========================================================
-// PARTICLE
-// ========================================================
-
-function createParticles(
-    x,
-    y,
-    amount = 10
-) {
-
-    for (let i = 0; i < amount; i++) {
-
-        particles.push({
-
-            x,
-            y,
-
-            vx:
-                (Math.random() - 0.5) * 150,
-
-            vy:
-                (Math.random() - 0.5) * 150,
-
-            life: 0.6,
-
-            maxLife: 0.6,
-
-            size:
-                Math.random() * 4 + 2
-        });
-    }
-}
-
-
-// ========================================================
-// COLLISION
-// ========================================================
-
-function rectanglesOverlap(
-    a,
-    b
-) {
-
-    return (
-        a.x - a.width / 2 <
-        b.x + b.width / 2 &&
-
-        a.x + a.width / 2 >
-        b.x - b.width / 2 &&
-
-        a.y - a.height / 2 <
-        b.y + b.height / 2 &&
-
-        a.y + a.height / 2 >
-        b.y - b.height / 2
-    );
-}
-
-
-// ========================================================
-// COIN COLLISION
-// ========================================================
-
-function collectCoins() {
-
-    for (
-        let i = coins.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const coin =
-            coins[i];
-
-        const dx =
-            player.x - coin.x;
-
-        const dy =
-            player.y - coin.y;
-
-        const distanceToCoin =
-            Math.sqrt(
-                dx * dx +
-                dy * dy
-            );
-
-        if (
-            distanceToCoin <
-            player.width / 2 +
-            coin.radius
-        ) {
-
-            coins.splice(i, 1);
-
-            coinsCollected++;
-
-            totalCoins++;
-
-            combo++;
-
-            comboTimer = 2.5;
-
-            score +=
-                10 +
-                combo * 2;
-
-            boostEnergy =
-                Math.min(
-                    MAX_POWER,
-                    boostEnergy + 12
-                );
-
-            shieldEnergy =
-                Math.min(
-                    MAX_POWER,
-                    shieldEnergy + 8
-                );
-
-            createParticles(
-                coin.x,
-                coin.y,
-                12
-            );
-
-            playSound(
-                700 + combo * 20,
-                0.08,
-                "sine",
-                0.035
-            );
-        }
-    }
-}
-
-
-// ========================================================
-// OBSTACLE COLLISION
-// ========================================================
-
-function checkObstacles() {
-
-    const playerBox = {
-
-        x: player.x,
-
-        y: player.y,
-
-        width:
-            player.width - 10,
-
-        height:
-            player.height - 10
-    };
-
-
-    for (
-        let i = obstacles.length - 1;
-        i >= 0;
-        i--
-    ) {
-
-        const obstacle =
-            obstacles[i];
-
-        const obstacleBox = {
-
-            x: obstacle.x,
-
-            y: obstacle.y,
-
-            width:
-                obstacle.width,
-
-            height:
-                obstacle.height
-        };
-
-
-        if (
-            rectanglesOverlap(
-                playerBox,
-                obstacleBox
-            )
-        ) {
-
-            obstacles.splice(i, 1);
-
-            createParticles(
-                player.x,
-                player.y,
-                20
-            );
-
-
-            // SHIELD
-
-            if (
-                player.shieldTimer > 0
-            ) {
-
-                player.shieldTimer = 0;
-
-                playSound(
-                    900,
-                    0.12,
-                    "triangle",
-                    0.05
-                );
-
-                continue;
-            }
-
-
-            // INVINCIBILITY
-
-            if (
-                player.invincibleTimer > 0
-            ) {
-
-                continue;
-            }
-
-
-            lives--;
-
-            player.invincibleTimer =
-                1.4;
-
-            combo = 0;
-
-            playSound(
-                100,
-                0.25,
-                "square",
-                0.06
-            );
-
-            updateUI();
-
-
-            if (lives <= 0) {
-
-                endGame();
-
-                return;
-            }
-        }
-    }
-}
-
-
-// ========================================================
-// UPDATE
-// ========================================================
-
-function update(dt) {
-
-    // ------------------------------------------
-    // SPEED
-    // ------------------------------------------
-
-    distance +=
-        roadSpeed * dt;
-
-    // Very gradual speed increase.
-    roadSpeed =
-        Math.min(
-            MAX_SPEED,
-            BASE_SPEED +
-            distance * 0.004
+            getRoadRight() -
+            player.width -
+            10
         );
 
 
-    // ------------------------------------------
-    // PLAYER
-    // ------------------------------------------
+    player.targetY =
+        clamp(
+            player.targetY,
 
-    const followSpeed =
-        8;
+            getRoadTop() + 10,
+
+            getRoadBottom() -
+            player.height -
+            10
+        );
+
+
+    const smoothing =
+        1 -
+        Math.exp(
+            -player.followSpeed * dt
+        );
+
 
     player.x +=
         (
             player.targetX -
             player.x
         ) *
-        Math.min(
-            1,
-            followSpeed * dt
-        );
+        smoothing;
 
 
-    // ------------------------------------------
-    // INVINCIBILITY
-    // ------------------------------------------
+    player.y +=
+        (
+            player.targetY -
+            player.y
+        ) *
+        smoothing;
 
-    if (
-        player.invincibleTimer > 0
-    ) {
-
-        player.invincibleTimer -= dt;
-    }
+}
 
 
-    // ------------------------------------------
-    // SHIELD
-    // ------------------------------------------
+/* =========================================================
+   COINS
+========================================================= */
 
-    if (
-        player.shieldTimer > 0
-    ) {
+function spawnCoin() {
 
-        player.shieldTimer -= dt;
-    }
+    const margin = 25;
 
+    coins.push({
 
-    // ------------------------------------------
-    // BOOST
-    // ------------------------------------------
+        x: random(
+            getRoadLeft() + margin,
+            getRoadRight() - margin
+        ),
 
-    if (
-        player.boostTimer > 0
-    ) {
+        y: random(
+            getRoadTop() + margin,
+            getRoadBottom() - margin
+        ),
 
-        player.boostTimer -= dt;
+        radius: 9,
 
-        if (
-            player.boostTimer <= 0
-        ) {
+        rotation: random(
+            0,
+            Math.PI * 2
+        ),
 
-            boostActive = false;
-        }
-    }
+        pulse: random(
+            0,
+            Math.PI * 2
+        )
 
+    });
 
-    // ------------------------------------------
-    // COMBO
-    // ------------------------------------------
-
-    if (comboTimer > 0) {
-
-        comboTimer -= dt;
-
-        if (
-            comboTimer <= 0
-        ) {
-
-            combo = 0;
-        }
-    }
+}
 
 
-    // ------------------------------------------
-    // SCORE
-    // ------------------------------------------
+function updateCoins(dt) {
 
-    score +=
-        roadSpeed *
-        dt *
-        0.045;
+    const px =
+        player.x +
+        player.width / 2;
 
+    const py =
+        player.y +
+        player.height / 2;
 
-    // ------------------------------------------
-    // SPAWN COINS
-    // ------------------------------------------
-
-    coinTimer -= dt;
-
-    if (coinTimer <= 0) {
-
-        spawnCoin();
-
-        coinTimer =
-            0.8 +
-            Math.random() * 0.7;
-    }
-
-
-    // ------------------------------------------
-    // SPAWN OBSTACLES
-    // ------------------------------------------
-
-    obstacleTimer -= dt;
-
-    if (obstacleTimer <= 0) {
-
-        spawnObstacle();
-
-        // Slow obstacle spawning at first.
-
-        obstacleTimer =
-            Math.max(
-                0.85,
-                1.8 -
-                distance * 0.00005
-            );
-    }
-
-
-    // ------------------------------------------
-    // COINS
-    // ------------------------------------------
 
     for (
         let i = coins.length - 1;
@@ -1130,62 +978,538 @@ function update(dt) {
         i--
     ) {
 
-        const coin =
-            coins[i];
+        const coin = coins[i];
 
-        coin.y +=
-            coin.speed *
-            dt;
 
         coin.rotation +=
             dt * 4;
 
+        coin.pulse +=
+            dt * 5;
+
+
+        /* MAGNET */
+
+        if (magnetActive) {
+
+            const dx =
+                px - coin.x;
+
+            const dy =
+                py - coin.y;
+
+            const dist =
+                Math.hypot(
+                    dx,
+                    dy
+                );
+
+            const radius =
+                getMagnetRadius();
+
+
+            if (
+                dist > 0.01 &&
+                dist < radius
+            ) {
+
+                const strength =
+                    650 +
+                    (
+                        1 -
+                        dist / radius
+                    ) *
+                    900;
+
+
+                coin.x +=
+                    (
+                        dx / dist
+                    ) *
+                    strength *
+                    dt;
+
+
+                coin.y +=
+                    (
+                        dy / dist
+                    ) *
+                    strength *
+                    dt;
+
+            }
+
+        }
+
+
+        /* COLLECT COIN */
+
+        const hitDistance =
+            distance(
+                px,
+                py,
+                coin.x,
+                coin.y
+            );
+
+
         if (
-            coin.y >
-            height + 40
+            hitDistance <
+            coin.radius + 22
         ) {
 
-            coins.splice(i, 1);
+            collectCoin(i);
+
         }
+
+    }
+
+}
+
+
+function collectCoin(index) {
+
+    const coin =
+        coins[index];
+
+    coins.splice(index, 1);
+
+
+    runCoins +=
+        1 +
+        coinUpgrade;
+
+
+    totalCoins +=
+        1 +
+        coinUpgrade;
+
+
+    combo += 1;
+
+    comboTimer = 2.5;
+
+
+    if (combo > bestCombo) {
+
+        bestCombo = combo;
+
     }
 
 
-    // ------------------------------------------
-    // OBSTACLES
-    // ------------------------------------------
+    const multiplier =
+        Math.min(
+            combo,
+            10
+        );
+
+
+    score +=
+        10 *
+        multiplier;
+
+
+    createBurst(
+        coin.x,
+        coin.y,
+        "#facc15",
+        10
+    );
+
+
+    playSound(
+        700 + combo * 25,
+        0.06,
+        "sine",
+        0.035
+    );
+
+
+    checkAchievements();
+
+
+    saveProgress();
+
+    updateUI();
+
+}
+
+
+/* =========================================================
+   OBSTACLES
+========================================================= */
+
+function spawnObstacle() {
+
+    const size =
+        random(
+            28,
+            45
+        );
+
+
+    const obstacle = {
+
+        x: random(
+            getRoadLeft() + size,
+            getRoadRight() - size
+        ),
+
+        y: random(
+            getRoadTop() + size,
+            getRoadBottom() - size
+        ),
+
+        width: size,
+
+        height: size,
+
+        vx: random(
+            -45,
+            45
+        ),
+
+        vy: random(
+            -45,
+            45
+        ),
+
+        rotation: random(
+            0,
+            Math.PI * 2
+        ),
+
+        rotationSpeed: random(
+            -1,
+            1
+        )
+
+    };
+
+
+    obstacles.push(
+        obstacle
+    );
+
+}
+
+
+function updateObstacles(dt) {
 
     for (
-        let i = obstacles.length - 1;
-        i >= 0;
-        i--
+        const obstacle of obstacles
     ) {
 
-        const obstacle =
-            obstacles[i];
-
-        const speedMultiplier =
-            boostActive
-                ? 1.7
-                : 1;
-
-        obstacle.y +=
-            obstacle.speed *
-            speedMultiplier *
+        obstacle.x +=
+            obstacle.vx *
             dt;
 
+        obstacle.y +=
+            obstacle.vy *
+            dt;
+
+        obstacle.rotation +=
+            obstacle.rotationSpeed *
+            dt;
+
+
+        const left =
+            getRoadLeft();
+
+        const right =
+            getRoadRight();
+
+        const top =
+            getRoadTop();
+
+        const bottom =
+            getRoadBottom();
+
+
         if (
-            obstacle.y >
-            height + 80
+            obstacle.x <
+            left
         ) {
 
-            obstacles.splice(i, 1);
+            obstacle.x =
+                left;
+
+            obstacle.vx =
+                Math.abs(
+                    obstacle.vx
+                );
+
         }
+
+
+        if (
+            obstacle.x +
+            obstacle.width >
+            right
+        ) {
+
+            obstacle.x =
+                right -
+                obstacle.width;
+
+            obstacle.vx =
+                -Math.abs(
+                    obstacle.vx
+                );
+
+        }
+
+
+        if (
+            obstacle.y <
+            top
+        ) {
+
+            obstacle.y =
+                top;
+
+            obstacle.vy =
+                Math.abs(
+                    obstacle.vy
+                );
+
+        }
+
+
+        if (
+            obstacle.y +
+            obstacle.height >
+            bottom
+        ) {
+
+            obstacle.y =
+                bottom -
+                obstacle.height;
+
+            obstacle.vy =
+                -Math.abs(
+                    obstacle.vy
+                );
+
+        }
+
     }
 
 
-    // ------------------------------------------
-    // PARTICLES
-    // ------------------------------------------
+    checkObstacleCollision();
+
+}
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function checkObstacleCollision() {
+
+    if (
+        player.invincibleTimer >
+        0
+    ) {
+
+        return;
+
+    }
+
+
+    const px =
+        player.x +
+        player.width / 2;
+
+    const py =
+        player.y +
+        player.height / 2;
+
+
+    for (
+        const obstacle of obstacles
+    ) {
+
+        const ox =
+            obstacle.x +
+            obstacle.width / 2;
+
+        const oy =
+            obstacle.y +
+            obstacle.height / 2;
+
+
+        const dist =
+            distance(
+                px,
+                py,
+                ox,
+                oy
+            );
+
+
+        if (
+            dist <
+            30 +
+            obstacle.width / 2
+        ) {
+
+            if (
+                shieldTimer > 0
+            ) {
+
+                createBurst(
+                    ox,
+                    oy,
+                    "#60a5fa",
+                    15
+                );
+
+                playSound(
+                    900,
+                    0.1,
+                    "triangle",
+                    0.04
+                );
+
+                obstacle.x +=
+                    obstacle.vx *
+                    0.2;
+
+                obstacle.y +=
+                    obstacle.vy *
+                    0.2;
+
+                return;
+
+            }
+
+
+            hitPlayer();
+
+            return;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   PLAYER HIT
+========================================================= */
+
+function hitPlayer() {
+
+    lives -= 1;
+
+    player.invincibleTimer =
+        2;
+
+    combo = 0;
+
+    comboTimer = 0;
+
+
+    createBurst(
+        player.x +
+        player.width / 2,
+
+        player.y +
+        player.height / 2,
+
+        "#ef4444",
+
+        25
+    );
+
+
+    playSound(
+        100,
+        0.25,
+        "sawtooth",
+        0.07
+    );
+
+
+    updateUI();
+
+
+    if (lives <= 0) {
+
+        endGame();
+
+    }
+
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function createBurst(
+    x,
+    y,
+    color,
+    count = 10
+) {
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        if (particles.length >= 220) {
+
+            particles.shift();
+
+        }
+
+
+        particles.push({
+
+            x: x,
+
+            y: y,
+
+            vx: random(
+                -150,
+                150
+            ),
+
+            vy: random(
+                -150,
+                150
+            ),
+
+            life: random(
+                0.3,
+                0.8
+            ),
+
+            maxLife: random(
+                0.3,
+                0.8
+            ),
+
+            size: random(
+                2,
+                5
+            ),
+
+            color: color
+
+        });
+
+    }
+
+}
+
+
+function updateParticles(dt) {
 
     for (
         let i = particles.length - 1;
@@ -1196,77 +1520,349 @@ function update(dt) {
         const particle =
             particles[i];
 
+
         particle.x +=
-            particle.vx * dt;
+            particle.vx *
+            dt;
+
 
         particle.y +=
-            particle.vy * dt;
+            particle.vy *
+            dt;
 
-        particle.life -= dt;
+
+        particle.vx *=
+            Math.pow(
+                0.03,
+                dt
+            );
+
+
+        particle.vy *=
+            Math.pow(
+                0.03,
+                dt
+            );
+
+
+        particle.life -=
+            dt;
+
 
         if (
             particle.life <= 0
         ) {
 
-            particles.splice(i, 1);
-        }
-    }
-
-
-    // ------------------------------------------
-    // POWER RECHARGE
-    // ------------------------------------------
-
-    if (!boostActive) {
-
-        boostEnergy =
-            Math.min(
-                MAX_POWER,
-                boostEnergy +
-                dt * 1.5
+            particles.splice(
+                i,
+                1
             );
+
+        }
+
     }
 
-
-    shieldEnergy =
-        Math.min(
-            MAX_POWER,
-            shieldEnergy +
-            dt * 1.1
-        );
-
-
-    collectCoins();
-
-    checkObstacles();
-
-    updateUI();
 }
 
 
-// ========================================================
-// DRAW BACKGROUND
-// ========================================================
+/* =========================================================
+   STARS
+========================================================= */
+
+function createStars() {
+
+    stars = [];
+
+    const amount =
+        Math.min(
+            100,
+            Math.floor(
+                canvasWidth *
+                canvasHeight /
+                7000
+            )
+        );
+
+
+    for (
+        let i = 0;
+        i < amount;
+        i++
+    ) {
+
+        stars.push({
+
+            x: random(
+                0,
+                canvasWidth
+            ),
+
+            y: random(
+                0,
+                canvasHeight
+            ),
+
+            size: random(
+                1,
+                2.5
+            ),
+
+            alpha: random(
+                0.2,
+                0.8
+            )
+
+        });
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE GAME
+========================================================= */
+
+function update(dt) {
+
+    gameTime += dt;
+
+
+    if (
+        player.invincibleTimer >
+        0
+    ) {
+
+        player.invincibleTimer -=
+            dt;
+
+    }
+
+
+    /* SCORE */
+
+    score +=
+        dt *
+        10;
+
+
+    /* PLAYER */
+
+    updatePlayer(dt);
+
+
+    /* COINS */
+
+    spawnTimer -= dt;
+
+
+    if (
+        spawnTimer <= 0
+    ) {
+
+        spawnCoin();
+
+        spawnTimer =
+            Math.max(
+                0.25,
+                0.8 -
+                gameTime * 0.002
+            );
+
+    }
+
+
+    updateCoins(dt);
+
+
+    /* OBSTACLES */
+
+    obstacleTimer -= dt;
+
+
+    if (
+        obstacleTimer <= 0
+    ) {
+
+        spawnObstacle();
+
+        obstacleTimer =
+            Math.max(
+                0.7,
+                2.2 -
+                gameTime * 0.015
+            );
+
+    }
+
+
+    updateObstacles(dt);
+
+
+    /* PARTICLES */
+
+    updateParticles(dt);
+
+
+    /* COMBO */
+
+    if (comboTimer > 0) {
+
+        comboTimer -= dt;
+
+    } else {
+
+        combo = 0;
+
+    }
+
+
+    /* BOOST */
+
+    if (boostActive) {
+
+        boostTimer -= dt;
+
+        boostEnergy -=
+            dt * 20;
+
+
+        if (
+            boostTimer <= 0 ||
+            boostEnergy <= 0
+        ) {
+
+            boostActive = false;
+
+        }
+
+    } else {
+
+        boostEnergy +=
+            dt * 12;
+
+    }
+
+
+    /* SHIELD */
+
+    if (shieldTimer > 0) {
+
+        shieldTimer -= dt;
+
+    } else {
+
+        shieldEnergy +=
+            dt * 8;
+
+    }
+
+
+    /* MAGNET */
+
+    if (magnetActive) {
+
+        magnetTimer -= dt;
+
+        magnetEnergy -=
+            dt *
+            (
+                100 /
+                getMagnetDuration()
+            );
+
+
+        if (
+            magnetTimer <= 0 ||
+            magnetEnergy <= 0
+        ) {
+
+            magnetActive = false;
+
+        }
+
+    } else {
+
+        magnetEnergy +=
+            dt * 10;
+
+    }
+
+
+    boostEnergy =
+        clamp(
+            boostEnergy,
+            0,
+            MAX_POWER
+        );
+
+
+    shieldEnergy =
+        clamp(
+            shieldEnergy,
+            0,
+            MAX_POWER
+        );
+
+
+    magnetEnergy =
+        clamp(
+            magnetEnergy,
+            0,
+            MAX_POWER
+        );
+
+
+    if (
+        gameTime >= 60
+    ) {
+
+        achievementData.survivor =
+            true;
+
+    }
+
+
+    checkAchievements();
+
+    updateUI();
+
+}
+
+
+/* =========================================================
+   DRAW BACKGROUND
+========================================================= */
 
 function drawBackground() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvasWidth,
+        canvasHeight
+    );
+
 
     const gradient =
         ctx.createLinearGradient(
             0,
             0,
             0,
-            height
+            canvasHeight
         );
+
 
     gradient.addColorStop(
         0,
-        "#101923"
+        "#020617"
     );
 
     gradient.addColorStop(
         1,
-        "#060a10"
+        "#111827"
     );
+
 
     ctx.fillStyle =
         gradient;
@@ -1274,113 +1870,16 @@ function drawBackground() {
     ctx.fillRect(
         0,
         0,
-        width,
-        height
+        canvasWidth,
+        canvasHeight
     );
 
 
-    // ROAD
-
-    const roadWidth =
-        Math.min(
-            width * 0.75,
-            500
-        );
-
-    const roadLeft =
-        (width - roadWidth) / 2;
-
-    ctx.fillStyle =
-        "#121a25";
-
-    ctx.fillRect(
-        roadLeft,
-        0,
-        roadWidth,
-        height
-    );
-
-
-    // ROAD EDGES
-
-    ctx.fillStyle =
-        "#3b3420";
-
-    ctx.fillRect(
-        roadLeft,
-        0,
-        5,
-        height
-    );
-
-    ctx.fillRect(
-        roadLeft + roadWidth - 5,
-        0,
-        5,
-        height
-    );
-
-
-    // ROAD LINES
-
-    const lineWidth = 8;
-
-    const lineHeight = 55;
-
-    const gap = 65;
-
-    const offset =
-        (
-            distance *
-            0.65
-        ) %
-        (lineHeight + gap);
-
-    ctx.fillStyle =
-        "#293342";
-
-    for (
-        let y =
-            -lineHeight +
-            offset;
-
-        y < height;
-
-        y +=
-            lineHeight +
-            gap
-    ) {
-
-        ctx.fillRect(
-            width / 2 - lineWidth / 2,
-            y,
-            lineWidth,
-            lineHeight
-        );
-    }
-
-
-    // STARS
+    /* STARS */
 
     for (
         const star of stars
     ) {
-
-        star.y +=
-            star.speed *
-            0.016;
-
-        if (
-            star.y >
-            height
-        ) {
-
-            star.y = -5;
-
-            star.x =
-                Math.random() *
-                width;
-        }
 
         ctx.globalAlpha =
             star.alpha;
@@ -1399,357 +1898,637 @@ function drawBackground() {
         );
 
         ctx.fill();
+
     }
+
 
     ctx.globalAlpha = 1;
-}
 
 
-// ========================================================
-// DRAW PLAYER
-// ========================================================
+    /* ROAD */
 
-function drawPlayer() {
+    const roadLeft =
+        getRoadLeft();
 
-    if (
-        player.invincibleTimer > 0 &&
-        Math.floor(
-            player.invincibleTimer * 12
-        ) % 2 === 0
-    ) {
+    const roadTop =
+        getRoadTop();
 
-        return;
-    }
+    const roadWidth =
+        getRoadWidth();
+
+    const roadHeight =
+        getRoadHeight();
 
 
-    ctx.save();
+    ctx.fillStyle =
+        "#1e293b";
 
-    ctx.translate(
-        player.x,
-        player.y
+    ctx.fillRect(
+        roadLeft,
+        roadTop,
+        roadWidth,
+        roadHeight
     );
 
 
-    // SHIELD
+    /* ROAD BORDER */
 
-    if (
-        player.shieldTimer > 0
+    ctx.strokeStyle =
+        "#475569";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+        roadLeft,
+        roadTop,
+        roadWidth,
+        roadHeight
+    );
+
+
+    /* GRID */
+
+    ctx.strokeStyle =
+        "rgba(148,163,184,0.10)";
+
+    ctx.lineWidth = 1;
+
+
+    const gridSize = 45;
+
+
+    for (
+        let x = roadLeft;
+        x <= roadLeft + roadWidth;
+        x += gridSize
     ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            roadTop
+        );
+
+        ctx.lineTo(
+            x,
+            roadTop + roadHeight
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for (
+        let y = roadTop;
+        y <= roadTop + roadHeight;
+        y += gridSize
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            roadLeft,
+            y
+        );
+
+        ctx.lineTo(
+            roadLeft + roadWidth,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* ROAD EDGE */
+
+    ctx.strokeStyle =
+        "rgba(250,204,21,0.25)";
+
+    ctx.lineWidth = 5;
+
+    ctx.strokeRect(
+        roadLeft + 5,
+        roadTop + 5,
+        roadWidth - 10,
+        roadHeight - 10
+    );
+
+}
+
+
+/* =========================================================
+   DRAW COINS
+========================================================= */
+
+function drawCoins() {
+
+    for (
+        const coin of coins
+    ) {
+
+        const scale =
+            1 +
+            Math.sin(
+                coin.pulse
+            ) *
+            0.08;
+
+
+        ctx.save();
+
+        ctx.translate(
+            coin.x,
+            coin.y
+        );
+
+        ctx.rotate(
+            coin.rotation
+        );
+
+        ctx.scale(
+            scale,
+            scale
+        );
+
+
+        ctx.fillStyle =
+            "#facc15";
+
+
+        ctx.strokeStyle =
+            "#a16207";
+
+
+        ctx.lineWidth = 2;
+
 
         ctx.beginPath();
 
         ctx.arc(
             0,
             0,
-            40,
+            coin.radius,
             0,
             Math.PI * 2
         );
 
-        ctx.strokeStyle =
-            "#55d9ff";
-
-        ctx.lineWidth = 4;
-
-        ctx.shadowBlur = 15;
-
-        ctx.shadowColor =
-            "#55d9ff";
+        ctx.fill();
 
         ctx.stroke();
 
-        ctx.shadowBlur = 0;
+
+        ctx.fillStyle =
+            "#fef08a";
+
+
+        ctx.font =
+            "bold 11px Arial";
+
+        ctx.textAlign =
+            "center";
+
+        ctx.textBaseline =
+            "middle";
+
+
+        ctx.fillText(
+            "$",
+            0,
+            1
+        );
+
+
+        ctx.restore();
+
     }
 
+}
 
-    // PLAYER BODY
+
+/* =========================================================
+   DRAW OBSTACLES
+========================================================= */
+
+function drawObstacles() {
+
+    for (
+        const obstacle of obstacles
+    ) {
+
+        ctx.save();
+
+
+        ctx.translate(
+            obstacle.x +
+            obstacle.width / 2,
+
+            obstacle.y +
+            obstacle.height / 2
+        );
+
+
+        ctx.rotate(
+            obstacle.rotation
+        );
+
+
+        ctx.fillStyle =
+            "#ef4444";
+
+
+        ctx.strokeStyle =
+            "#7f1d1d";
+
+
+        ctx.lineWidth = 3;
+
+
+        ctx.fillRect(
+            -obstacle.width / 2,
+            -obstacle.height / 2,
+            obstacle.width,
+            obstacle.height
+        );
+
+
+        ctx.strokeRect(
+            -obstacle.width / 2,
+            -obstacle.height / 2,
+            obstacle.width,
+            obstacle.height
+        );
+
+
+        ctx.fillStyle =
+            "#fecaca";
+
+
+        ctx.fillRect(
+            -5,
+            -obstacle.height / 2 + 7,
+            10,
+            obstacle.height - 14
+        );
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW MAGNET
+========================================================= */
+
+function drawMagnetEffect() {
+
+    if (!magnetActive) return;
+
+
+    const px =
+        player.x +
+        player.width / 2;
+
+    const py =
+        player.y +
+        player.height / 2;
+
+
+    const radius =
+        getMagnetRadius();
+
+
+    ctx.save();
+
+
+    ctx.globalAlpha = 0.10;
 
     ctx.fillStyle =
-        "#2d8cff";
+        "#f472b6";
 
     ctx.beginPath();
 
-    ctx.roundRect(
-        -19,
-        -25,
-        38,
-        50,
-        9
+    ctx.arc(
+        px,
+        py,
+        radius,
+        0,
+        Math.PI * 2
     );
 
     ctx.fill();
 
 
-    // PLAYER TOP
+    ctx.globalAlpha = 0.4;
+
+    ctx.strokeStyle =
+        "#f472b6";
+
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        px,
+        py,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.stroke();
+
+
+    ctx.globalAlpha = 0.7;
+
+    ctx.strokeStyle =
+        "#f9a8d4";
+
+    ctx.lineWidth = 1;
+
+
+    for (
+        const coin of coins
+    ) {
+
+        const d =
+            distance(
+                px,
+                py,
+                coin.x,
+                coin.y
+            );
+
+
+        if (d < radius) {
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                coin.x,
+                coin.y
+            );
+
+            ctx.lineTo(
+                px,
+                py
+            );
+
+            ctx.stroke();
+
+        }
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer() {
+
+    if (
+        player.invincibleTimer > 0 &&
+        Math.floor(
+            player.invincibleTimer * 10
+        ) % 2 === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const skin =
+        skins[selectedSkin] ||
+        skins.blue;
+
+
+    const centerX =
+        player.x +
+        player.width / 2;
+
+    const centerY =
+        player.y +
+        player.height / 2;
+
+
+    /* SHIELD */
+
+    if (
+        shieldTimer > 0
+    ) {
+
+        ctx.save();
+
+        ctx.globalAlpha = 0.25;
+
+        ctx.fillStyle =
+            "#60a5fa";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            38,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+
+        ctx.globalAlpha = 0.8;
+
+        ctx.strokeStyle =
+            "#93c5fd";
+
+        ctx.lineWidth = 2;
+
+        ctx.stroke();
+
+
+        ctx.restore();
+
+    }
+
+
+    /* CAR */
+
+    ctx.save();
+
+
+    ctx.translate(
+        centerX,
+        centerY
+    );
+
+
+    /* BODY */
 
     ctx.fillStyle =
-        "#53b4ff";
+        skin.main;
+
+    ctx.strokeStyle =
+        skin.dark;
+
+    ctx.lineWidth = 3;
+
 
     ctx.beginPath();
 
     ctx.roundRect(
-        -13,
-        -19,
-        26,
-        14,
+        -player.width / 2,
+        -player.height / 2,
+        player.width,
+        player.height,
+        10
+    );
+
+    ctx.fill();
+
+    ctx.stroke();
+
+
+    /* WINDOW */
+
+    ctx.fillStyle =
+        skin.light;
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+        -12,
+        -17,
+        24,
+        15,
         5
     );
 
     ctx.fill();
 
 
-    // FACE
+    /* CENTER STRIPE */
 
     ctx.fillStyle =
-        "#07111e";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        -7,
-        -4,
-        3,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.arc(
-        7,
-        -4,
-        3,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-
-    // BODY LIGHT
-
-    ctx.fillStyle =
-        "#1d6ec9";
+        skin.dark;
 
     ctx.fillRect(
-        -12,
-        8,
-        24,
-        8
+        -3,
+        -player.height / 2,
+        6,
+        player.height
     );
 
 
-    // BOOST FLAME
+    /* WHEELS */
+
+    ctx.fillStyle =
+        "#020617";
+
+
+    ctx.fillRect(
+        -player.width / 2 - 5,
+        -15,
+        6,
+        14
+    );
+
+
+    ctx.fillRect(
+        player.width / 2 - 1,
+        -15,
+        6,
+        14
+    );
+
+
+    ctx.fillRect(
+        -player.width / 2 - 5,
+        8,
+        6,
+        14
+    );
+
+
+    ctx.fillRect(
+        player.width / 2 - 1,
+        8,
+        6,
+        14
+    );
+
+
+    /* BOOST FLAME */
 
     if (boostActive) {
 
         ctx.fillStyle =
-            "#ffd21c";
+            "#facc15";
 
         ctx.beginPath();
 
         ctx.moveTo(
-            -9,
-            25
+            -7,
+            player.height / 2
         );
 
         ctx.lineTo(
             0,
-            42 +
-            Math.random() * 8
+            player.height / 2 + 20
         );
 
         ctx.lineTo(
-            9,
-            25
+            7,
+            player.height / 2
         );
 
         ctx.closePath();
 
         ctx.fill();
 
-        ctx.fillStyle =
-            "#ff772b";
+    }
 
-        ctx.beginPath();
 
-        ctx.moveTo(
-            -5,
-            25
-        );
+    /* MAGNET ICON */
 
-        ctx.lineTo(
+    if (magnetActive) {
+
+        ctx.font =
+            "20px Arial";
+
+        ctx.textAlign =
+            "center";
+
+        ctx.fillText(
+            "🧲",
             0,
-            35 +
-            Math.random() * 5
+            -40
         );
 
-        ctx.lineTo(
-            5,
-            25
-        );
-
-        ctx.closePath();
-
-        ctx.fill();
     }
 
 
     ctx.restore();
+
 }
 
 
-// ========================================================
-// DRAW COIN
-// ========================================================
-
-function drawCoin(coin) {
-
-    ctx.save();
-
-    ctx.translate(
-        coin.x,
-        coin.y
-    );
-
-    const scale =
-        Math.abs(
-            Math.cos(
-                coin.rotation
-            )
-        );
-
-    ctx.scale(
-        Math.max(
-            0.25,
-            scale
-        ),
-        1
-    );
-
-
-    // outer circle
-
-    ctx.fillStyle =
-        "#f5b900";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        coin.radius,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-
-    // inner circle
-
-    ctx.fillStyle =
-        "#ffd83d";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        coin.radius - 3,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-
-    // center symbol
-
-    ctx.fillStyle =
-        "#d89b00";
-
-    ctx.font =
-        "bold 12px Arial";
-
-    ctx.textAlign =
-        "center";
-
-    ctx.textBaseline =
-        "middle";
-
-    ctx.fillText(
-        "$",
-        0,
-        1
-    );
-
-    ctx.restore();
-}
-
-
-// ========================================================
-// DRAW OBSTACLE
-// ========================================================
-
-function drawObstacle(obstacle) {
-
-    ctx.save();
-
-    ctx.translate(
-        obstacle.x,
-        obstacle.y
-    );
-
-    ctx.rotate(
-        obstacle.rotation
-    );
-
-
-    ctx.fillStyle =
-        "#9d3041";
-
-    ctx.beginPath();
-
-    ctx.roundRect(
-        -obstacle.width / 2,
-        -obstacle.height / 2,
-        obstacle.width,
-        obstacle.height,
-        6
-    );
-
-    ctx.fill();
-
-
-    ctx.strokeStyle =
-        "#e04459";
-
-    ctx.lineWidth = 4;
-
-    ctx.stroke();
-
-
-    ctx.fillStyle =
-        "#141923";
-
-    ctx.beginPath();
-
-    ctx.roundRect(
-        -obstacle.width / 2 + 7,
-        -obstacle.height / 2 + 7,
-        obstacle.width - 14,
-        obstacle.height - 14,
-        3
-    );
-
-    ctx.fill();
-
-    ctx.restore();
-}
-
-
-// ========================================================
-// DRAW PARTICLES
-// ========================================================
+/* =========================================================
+   DRAW PARTICLES
+========================================================= */
 
 function drawParticles() {
 
@@ -1757,12 +2536,21 @@ function drawParticles() {
         const particle of particles
     ) {
 
+        const alpha =
+            clamp(
+                particle.life /
+                particle.maxLife,
+                0,
+                1
+            );
+
+
         ctx.globalAlpha =
-            particle.life /
-            particle.maxLife;
+            alpha;
 
         ctx.fillStyle =
-            "#ffd21c";
+            particle.color;
+
 
         ctx.beginPath();
 
@@ -1775,259 +2563,1273 @@ function drawParticles() {
         );
 
         ctx.fill();
+
     }
 
+
     ctx.globalAlpha = 1;
+
 }
 
 
-// ========================================================
-// DRAW BOOST EFFECT
-// ========================================================
+/* =========================================================
+   DRAW COMBO
+========================================================= */
 
-function drawBoostEffect() {
+function drawCombo() {
 
-    if (!boostActive) {
+    if (
+        combo < 2 ||
+        comboTimer <= 0
+    ) {
+
         return;
+
     }
+
 
     ctx.save();
 
-    ctx.globalAlpha = 0.16;
+    ctx.textAlign =
+        "center";
+
+
+    ctx.font =
+        "bold 22px Arial";
+
 
     ctx.fillStyle =
-        "#ffd21c";
+        "#facc15";
 
-    for (
-        let i = 0;
-        i < 8;
-        i++
-    ) {
 
-        const x =
-            Math.random() *
-            width;
+    ctx.fillText(
+        combo + "x COMBO",
+        canvasWidth / 2,
+        40
+    );
 
-        const y =
-            Math.random() *
-            height;
-
-        ctx.fillRect(
-            x,
-            y,
-            2,
-            30 +
-            Math.random() * 30
-        );
-    }
 
     ctx.restore();
+
 }
 
 
-// ========================================================
-// DRAW
-// ========================================================
+/* =========================================================
+   DRAW
+========================================================= */
 
 function draw() {
 
     drawBackground();
 
-    drawBoostEffect();
+    drawMagnetEffect();
 
+    drawCoins();
 
-    for (
-        const coin of coins
-    ) {
-
-        drawCoin(coin);
-    }
-
-
-    for (
-        const obstacle of obstacles
-    ) {
-
-        drawObstacle(obstacle);
-    }
-
+    drawObstacles();
 
     drawPlayer();
 
     drawParticles();
+
+    drawCombo();
+
 }
 
 
-// ========================================================
-// GAME LOOP
-// ========================================================
+/* =========================================================
+   GAME LOOP
+========================================================= */
 
 function gameLoop(timestamp) {
 
-    if (!gameRunning) {
-        return;
+    if (!lastTime) {
+
+        lastTime = timestamp;
+
     }
 
 
-    const delta =
+    let dt =
+        (timestamp - lastTime) /
+        1000;
+
+
+    lastTime = timestamp;
+
+
+    dt =
         Math.min(
-            (timestamp - lastTime) /
-            1000,
+            dt,
             0.033
         );
 
-    lastTime =
-        timestamp;
 
+    if (
+        gameRunning &&
+        !gamePaused
+    ) {
 
-    if (!paused) {
+        update(dt);
 
-        update(delta);
-
-        draw();
     }
 
 
-    animationId =
-        requestAnimationFrame(
-            gameLoop
-        );
+    draw();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
 }
 
 
-// ========================================================
-// UI UPDATE
-// ========================================================
+/* =========================================================
+   POWER: BOOST
+========================================================= */
+
+function activateBoost() {
+
+    if (
+        !gameRunning ||
+        gamePaused
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        boostActive
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        boostEnergy < 25
+    ) {
+
+        return;
+
+    }
+
+
+    boostActive = true;
+
+    boostTimer =
+        3 +
+        boostUpgrade *
+        0.5;
+
+
+    boostEnergy -= 25;
+
+
+    createBurst(
+        player.x +
+        player.width / 2,
+
+        player.y +
+        player.height / 2,
+
+        "#facc15",
+
+        12
+    );
+
+
+    playSound(
+        800,
+        0.15,
+        "square",
+        0.05
+    );
+
+}
+
+
+/* =========================================================
+   POWER: SHIELD
+========================================================= */
+
+function activateShield() {
+
+    if (
+        !gameRunning ||
+        gamePaused
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        shieldTimer > 0
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        shieldEnergy < 30
+    ) {
+
+        return;
+
+    }
+
+
+    shieldTimer =
+        4;
+
+
+    shieldEnergy -= 30;
+
+
+    playSound(
+        500,
+        0.15,
+        "triangle",
+        0.05
+    );
+
+}
+
+
+/* =========================================================
+   POWER: MAGNET
+========================================================= */
+
+function activateMagnet() {
+
+    if (
+        !gameRunning ||
+        gamePaused
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        magnetActive
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        magnetEnergy < 100
+    ) {
+
+        return;
+
+    }
+
+
+    magnetActive = true;
+
+    magnetTimer =
+        getMagnetDuration();
+
+
+    magnetEnergy = 0;
+
+
+    achievementData.magnet =
+        true;
+
+
+    createBurst(
+        player.x +
+        player.width / 2,
+
+        player.y +
+        player.height / 2,
+
+        "#f472b6",
+
+        18
+    );
+
+
+    playSound(
+        600,
+        0.18,
+        "sine",
+        0.05
+    );
+
+
+    saveProgress();
+
+}
+
+
+/* =========================================================
+   UI
+========================================================= */
 
 function updateUI() {
 
-    scoreEl.textContent =
+    scoreElement.textContent =
         Math.floor(score);
 
-    coinsEl.textContent =
+
+    coinsElement.textContent =
         totalCoins;
 
-    bestEl.textContent =
+
+    bestElement.textContent =
         bestScore;
 
 
-    // HEARTS
+    shopCoins.textContent =
+        totalCoins;
 
-    let hearts = "";
-
-    for (
-        let i = 0;
-        i < 3;
-        i++
-    ) {
-
-        hearts +=
-            i < lives
-                ? "❤️ "
-                : "🖤 ";
-    }
-
-    heartsEl.textContent =
-        hearts;
-
-
-    // POWER
 
     boostBar.style.width =
-        `${boostEnergy}%`;
+        boostEnergy + "%";
+
 
     shieldBar.style.width =
-        `${shieldEnergy}%`;
+        shieldEnergy + "%";
 
 
-    // BUTTON STATES
+    magnetBar.style.width =
+        magnetEnergy + "%";
 
-    boostBtn.style.opacity =
-        boostEnergy >= 100
-            ? "1"
-            : "0.65";
 
-    shieldBtn.style.opacity =
-        shieldEnergy >= 100
-            ? "1"
-            : "0.65";
+    if (boostActive) {
+
+        boostBtn.classList.add(
+            "active"
+        );
+
+    } else {
+
+        boostBtn.classList.remove(
+            "active"
+        );
+
+    }
+
+
+    if (shieldTimer > 0) {
+
+        shieldBtn.classList.add(
+            "active"
+        );
+
+    } else {
+
+        shieldBtn.classList.remove(
+            "active"
+        );
+
+    }
+
+
+    if (magnetActive) {
+
+        magnetBtn.classList.add(
+            "active"
+        );
+
+    } else {
+
+        magnetBtn.classList.remove(
+            "active"
+        );
+
+    }
+
+
+    heartsElement.textContent =
+        "❤️ ".repeat(
+            Math.max(
+                lives,
+                0
+            )
+        );
+
+
+    if (lives <= 0) {
+
+        heartsElement.textContent =
+            "💔";
+
+    }
+
+
+    boostUpgradeLevel.textContent =
+        boostUpgrade;
+
+
+    magnetUpgradeLevel.textContent =
+        magnetUpgrade;
+
+
+    coinUpgradeLevel.textContent =
+        coinUpgrade;
+
+
+    buyBoostUpgrade.disabled =
+        boostUpgrade >= 3 ||
+        totalCoins < 200;
+
+
+    buyMagnetUpgrade.disabled =
+        magnetUpgrade >= 3 ||
+        totalCoins < 200;
+
+
+    buyCoinUpgrade.disabled =
+        coinUpgrade >= 3 ||
+        totalCoins < 200;
+
 }
 
 
-// ========================================================
-// BUTTON EVENTS
-// ========================================================
+/* =========================================================
+   SAVE
+========================================================= */
+
+function saveProgress() {
+
+    localStorage.setItem(
+        "coinRushCoinsV5",
+        totalCoins
+    );
+
+
+    localStorage.setItem(
+        "coinRushBestV5",
+        bestScore
+    );
+
+
+    localStorage.setItem(
+        "coinRushSkinV5",
+        selectedSkin
+    );
+
+
+    localStorage.setItem(
+        "coinRushSkinsV5",
+        JSON.stringify(
+            ownedSkins
+        )
+    );
+
+
+    localStorage.setItem(
+        "coinRushBoostUpgradeV5",
+        boostUpgrade
+    );
+
+
+    localStorage.setItem(
+        "coinRushMagnetUpgradeV5",
+        magnetUpgrade
+    );
+
+
+    localStorage.setItem(
+        "coinRushCoinUpgradeV5",
+        coinUpgrade
+    );
+
+
+    localStorage.setItem(
+        "coinRushAchievementsV5",
+        JSON.stringify(
+            achievementData
+        )
+    );
+
+}
+
+
+/* =========================================================
+   ACHIEVEMENTS
+========================================================= */
+
+function checkAchievements() {
+
+    if (
+        totalCoins >= 1
+    ) {
+
+        achievementData.firstCoin =
+            true;
+
+    }
+
+
+    if (
+        totalCoins >= 100
+    ) {
+
+        achievementData.coins100 =
+            true;
+
+    }
+
+
+    if (
+        score >= 1000
+    ) {
+
+        achievementData.score1000 =
+            true;
+
+    }
+
+
+    if (
+        bestCombo >= 10
+    ) {
+
+        achievementData.combo10 =
+            true;
+
+    }
+
+
+    if (
+        gameTime >= 60
+    ) {
+
+        achievementData.survivor =
+            true;
+
+    }
+
+
+    saveProgress();
+
+    renderAchievements();
+
+}
+
+
+function renderAchievements() {
+
+    achievementList.innerHTML = "";
+
+
+    for (
+        const achievement of achievements
+    ) {
+
+        const unlocked =
+            achievementData[
+                achievement.id
+            ] === true;
+
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.className =
+            "achievement " +
+            (
+                unlocked
+                    ? "unlocked"
+                    : ""
+            );
+
+
+        div.innerHTML = `
+
+            <div class="achievement-icon">
+                ${achievement.icon}
+            </div>
+
+            <div class="achievement-title">
+                ${achievement.title}
+            </div>
+
+            <div class="achievement-description">
+                ${achievement.description}
+            </div>
+
+        `;
+
+
+        achievementList.appendChild(
+            div
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SHOP
+========================================================= */
+
+function openShop() {
+
+    shopScreen.classList.remove(
+        "hidden"
+    );
+
+    renderShop();
+
+}
+
+
+function closeShop() {
+
+    shopScreen.classList.add(
+        "hidden"
+    );
+
+}
+
+
+function renderShop() {
+
+    shopCoins.textContent =
+        totalCoins;
+
+
+    document
+        .querySelectorAll(
+            ".skin-card"
+        )
+        .forEach(card => {
+
+            const skin =
+                card.dataset.skin;
+
+
+            card.classList.toggle(
+                "selected",
+                skin === selectedSkin
+            );
+
+        });
+
+
+    updateUI();
+
+}
+
+
+/* =========================================================
+   BUY / SELECT SKIN
+========================================================= */
+
+document
+    .querySelectorAll(
+        ".skin-card"
+    )
+    .forEach(card => {
+
+        card.addEventListener(
+            "click",
+            () => {
+
+                const skin =
+                    card.dataset.skin;
+
+
+                const prices = {
+
+                    blue: 0,
+
+                    green: 100,
+
+                    orange: 200,
+
+                    purple: 300
+
+                };
+
+
+                const price =
+                    prices[skin];
+
+
+                if (
+                    ownedSkins.includes(
+                        skin
+                    )
+                ) {
+
+                    selectedSkin =
+                        skin;
+
+                    saveProgress();
+
+                    renderShop();
+
+                    return;
+
+                }
+
+
+                if (
+                    totalCoins >= price
+                ) {
+
+                    totalCoins -=
+                        price;
+
+
+                    ownedSkins.push(
+                        skin
+                    );
+
+
+                    selectedSkin =
+                        skin;
+
+
+                    saveProgress();
+
+                    renderShop();
+
+                    playSound(
+                        900,
+                        0.15,
+                        "triangle",
+                        0.04
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   BOOST UPGRADE
+========================================================= */
+
+buyBoostUpgrade.addEventListener(
+    "click",
+    () => {
+
+        if (
+            boostUpgrade >= 3
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            totalCoins < 200
+        ) {
+
+            return;
+
+        }
+
+
+        totalCoins -= 200;
+
+        boostUpgrade += 1;
+
+
+        saveProgress();
+
+        updateUI();
+
+        playSound(
+            700,
+            0.12,
+            "triangle",
+            0.04
+        );
+
+    }
+);
+
+
+/* =========================================================
+   MAGNET UPGRADE
+========================================================= */
+
+buyMagnetUpgrade.addEventListener(
+    "click",
+    () => {
+
+        if (
+            magnetUpgrade >= 3
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            totalCoins < 200
+        ) {
+
+            return;
+
+        }
+
+
+        totalCoins -= 200;
+
+        magnetUpgrade += 1;
+
+
+        saveProgress();
+
+        updateUI();
+
+        playSound(
+            700,
+            0.12,
+            "triangle",
+            0.04
+        );
+
+    }
+);
+
+
+/* =========================================================
+   COIN UPGRADE
+========================================================= */
+
+buyCoinUpgrade.addEventListener(
+    "click",
+    () => {
+
+        if (
+            coinUpgrade >= 3
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            totalCoins < 200
+        ) {
+
+            return;
+
+        }
+
+
+        totalCoins -= 200;
+
+        coinUpgrade += 1;
+
+
+        saveProgress();
+
+        updateUI();
+
+        playSound(
+            700,
+            0.12,
+            "triangle",
+            0.04
+        );
+
+    }
+);
+
+
+/* =========================================================
+   BUTTON EVENTS
+========================================================= */
 
 startBtn.addEventListener(
     "click",
     startGame
 );
 
+
 restartBtn.addEventListener(
     "click",
     startGame
 );
+
 
 pauseBtn.addEventListener(
     "click",
     togglePause
 );
 
+
 resumeBtn.addEventListener(
     "click",
     togglePause
 );
 
+
+shopBtnStart.addEventListener(
+    "click",
+    openShop
+);
+
+
+pauseShopBtn.addEventListener(
+    "click",
+    openShop
+);
+
+
+gameOverShopBtn.addEventListener(
+    "click",
+    openShop
+);
+
+
+closeShopBtn.addEventListener(
+    "click",
+    closeShop
+);
+
+
 boostBtn.addEventListener(
     "click",
-    function() {
-
-        initializeAudio();
-
-        activateBoost();
-    }
+    activateBoost
 );
+
 
 shieldBtn.addEventListener(
     "click",
-    function() {
+    activateShield
+);
 
-        initializeAudio();
 
-        activateShield();
+magnetBtn.addEventListener(
+    "click",
+    activateMagnet
+);
+
+
+/* =========================================================
+   KEYBOARD CONTROLS
+========================================================= */
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        const key =
+            event.key.toLowerCase();
+
+
+        if (
+            [
+                "arrowleft",
+                "arrowright",
+                "arrowup",
+                "arrowdown",
+                " "
+            ].includes(key)
+        ) {
+
+            event.preventDefault();
+
+        }
+
+
+        /* LEFT */
+
+        if (
+            key === "arrowleft" ||
+            key === "a"
+        ) {
+
+            keys.left = true;
+
+        }
+
+
+        /* RIGHT */
+
+        if (
+            key === "arrowright" ||
+            key === "d"
+        ) {
+
+            keys.right = true;
+
+        }
+
+
+        /* FORWARD */
+
+        if (
+            key === "arrowup" ||
+            key === "w"
+        ) {
+
+            keys.forward = true;
+
+        }
+
+
+        /* BACKWARD */
+
+        if (
+            key === "arrowdown" ||
+            key === "s"
+        ) {
+
+            keys.backward = true;
+
+        }
+
+
+        /* BOOST */
+
+        if (
+            key === "b" &&
+            !event.repeat
+        ) {
+
+            activateBoost();
+
+        }
+
+
+        /* SHIELD */
+
+        if (
+            key === "q" &&
+            !event.repeat
+        ) {
+
+            activateShield();
+
+        }
+
+
+        /* MAGNET */
+
+        if (
+            key === "m" &&
+            !event.repeat
+        ) {
+
+            activateMagnet();
+
+        }
+
+
+        /* PAUSE */
+
+        if (
+            (
+                key === "p" ||
+                key === " "
+            ) &&
+            !event.repeat
+        ) {
+
+            togglePause();
+
+        }
+
     }
 );
 
 
-// ========================================================
-// INITIALIZE
-// ========================================================
+/* =========================================================
+   KEYBOARD RELEASE
+========================================================= */
 
-function initializeGame() {
+window.addEventListener(
+    "keyup",
+    event => {
 
-    resizeCanvas();
+        const key =
+            event.key.toLowerCase();
 
-    createStars();
 
-    bestEl.textContent =
-        bestScore;
+        if (
+            key === "arrowleft" ||
+            key === "a"
+        ) {
 
-    coinsEl.textContent =
-        totalCoins;
+            keys.left = false;
 
-    player.x =
-        width / 2;
+        }
+
+
+        if (
+            key === "arrowright" ||
+            key === "d"
+        ) {
+
+            keys.right = false;
+
+        }
+
+
+        if (
+            key === "arrowup" ||
+            key === "w"
+        ) {
+
+            keys.forward = false;
+
+        }
+
+
+        if (
+            key === "arrowdown" ||
+            key === "s"
+        ) {
+
+            keys.backward = false;
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MOUSE / TOUCH MOVEMENT
+========================================================= */
+
+let pointerActive = false;
+
+
+function movePlayerToPointer(event) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const x =
+        event.clientX -
+        rect.left;
+
+
+    const y =
+        event.clientY -
+        rect.top;
+
 
     player.targetX =
-        width / 2;
+        clamp(
+            x -
+            player.width / 2,
 
-    player.y =
-        height - 100;
+            getRoadLeft() + 10,
 
-    draw();
+            getRoadRight() -
+            player.width -
+            10
+        );
 
-    updateUI();
+
+    player.targetY =
+        clamp(
+            y -
+            player.height / 2,
+
+            getRoadTop() + 10,
+
+            getRoadBottom() -
+            player.height -
+            10
+        );
+
 }
 
 
-initializeGame();
+canvas.addEventListener(
+    "pointerdown",
+    event => {
+
+        pointerActive = true;
+
+        movePlayerToPointer(
+            event
+        );
+
+    }
+);
+
+
+canvas.addEventListener(
+    "pointermove",
+    event => {
+
+        if (
+            pointerActive
+        ) {
+
+            movePlayerToPointer(
+                event
+            );
+
+        }
+
+    }
+);
+
+
+canvas.addEventListener(
+    "pointerup",
+    () => {
+
+        pointerActive = false;
+
+    }
+);
+
+
+canvas.addEventListener(
+    "pointercancel",
+    () => {
+
+        pointerActive = false;
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+resizeCanvas();
+
+createStars();
+
+renderAchievements();
+
+updateUI();
+
+requestAnimationFrame(
+    gameLoop
+);
