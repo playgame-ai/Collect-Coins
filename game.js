@@ -1,47 +1,105 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+```javascript
+// ============================================================
+// COIN RUSH - VERSION 3
+// ============================================================
+
+const canvas =
+    document.getElementById("gameCanvas");
+
+const ctx =
+    canvas.getContext("2d", {
+        alpha: false
+    });
 
 
-// -----------------------------
+// ============================================================
 // UI
-// -----------------------------
+// ============================================================
 
-const startScreen = document.getElementById("startScreen");
-const gameOverScreen = document.getElementById("gameOverScreen");
+const startScreen =
+    document.getElementById("startScreen");
 
-const startButton = document.getElementById("startButton");
-const restartButton = document.getElementById("restartButton");
+const pauseScreen =
+    document.getElementById("pauseScreen");
 
-const scoreDisplay = document.getElementById("scoreDisplay");
-const coinDisplay = document.getElementById("coinDisplay");
-const bestDisplay = document.getElementById("bestDisplay");
+const gameOverScreen =
+    document.getElementById("gameOverScreen");
 
-const livesDisplay = document.getElementById("livesDisplay");
-const levelDisplay = document.getElementById("levelDisplay");
+const startButton =
+    document.getElementById("startButton");
 
-const finalScore = document.getElementById("finalScore");
-const finalCoins = document.getElementById("finalCoins");
-const finalBest = document.getElementById("finalBest");
+const restartButton =
+    document.getElementById("restartButton");
 
-const powerMessage = document.getElementById("powerMessage");
+const pauseButton =
+    document.getElementById("pauseButton");
 
-const shieldStatus = document.getElementById("shieldStatus");
-const boostStatus = document.getElementById("boostStatus");
+const resumeButton =
+    document.getElementById("resumeButton");
 
-const leftButton = document.getElementById("leftButton");
-const rightButton = document.getElementById("rightButton");
+const scoreDisplay =
+    document.getElementById("scoreDisplay");
+
+const coinDisplay =
+    document.getElementById("coinDisplay");
+
+const bestDisplay =
+    document.getElementById("bestDisplay");
+
+const livesDisplay =
+    document.getElementById("livesDisplay");
+
+const levelDisplay =
+    document.getElementById("levelDisplay");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+const finalCoins =
+    document.getElementById("finalCoins");
+
+const finalBest =
+    document.getElementById("finalBest");
+
+const finalCombo =
+    document.getElementById("finalCombo");
+
+const powerMessage =
+    document.getElementById("powerMessage");
+
+const comboDisplay =
+    document.getElementById("comboDisplay");
+
+const shieldStatus =
+    document.getElementById("shieldStatus");
+
+const boostStatus =
+    document.getElementById("boostStatus");
+
+const magnetStatus =
+    document.getElementById("magnetStatus");
+
+const leftButton =
+    document.getElementById("leftButton");
+
+const rightButton =
+    document.getElementById("rightButton");
 
 
-// -----------------------------
+// ============================================================
 // CANVAS
-// -----------------------------
+// ============================================================
 
 function resizeCanvas() {
 
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    canvas.width =
+        canvas.clientWidth;
+
+    canvas.height =
+        canvas.clientHeight;
 
     if (!gameRunning) {
+
         player.x =
             canvas.width / 2 -
             player.width / 2;
@@ -51,16 +109,22 @@ function resizeCanvas() {
     }
 }
 
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
 
 
-// -----------------------------
-// GAME VARIABLES
-// -----------------------------
+// ============================================================
+// GAME STATE
+// ============================================================
 
 let gameRunning = false;
 
+let gamePaused = false;
+
 let score = 0;
+
 let coinsCollected = 0;
 
 let lives = 3;
@@ -72,28 +136,66 @@ let gameSpeed = 4;
 let roadOffset = 0;
 
 let coinTimer = 0;
+
 let obstacleTimer = 0;
+
 let powerTimer = 0;
-
-let shieldActive = false;
-let boostActive = false;
-
-let shieldTime = 0;
-let boostTime = 0;
-
-let particles = [];
 
 let animationId = null;
 
+let lastTime = 0;
+
+const MAX_DELTA = 32;
+
+
+// ============================================================
+// POWER-UPS
+// ============================================================
+
+let shieldActive = false;
+
+let boostActive = false;
+
+let magnetActive = false;
+
+let shieldTime = 0;
+
+let boostTime = 0;
+
+let magnetTime = 0;
+
+
+// ============================================================
+// COMBO
+// ============================================================
+
+let combo = 0;
+
+let maxCombo = 0;
+
+let comboTimer = 0;
+
+const COMBO_DURATION = 150;
+
+
+// ============================================================
+// BEST SCORE
+// ============================================================
+
 let bestScore =
-    Number(localStorage.getItem("coinRushBest")) || 0;
+    Number(
+        localStorage.getItem(
+            "coinRushBest"
+        )
+    ) || 0;
 
-bestDisplay.textContent = bestScore;
+bestDisplay.textContent =
+    bestScore;
 
 
-// -----------------------------
+// ============================================================
 // PLAYER
-// -----------------------------
+// ============================================================
 
 const player = {
 
@@ -105,7 +207,7 @@ const player = {
 
     y: 0,
 
-    speed: 7,
+    speed: 430,
 
     movingLeft: false,
 
@@ -113,20 +215,22 @@ const player = {
 };
 
 
-// -----------------------------
-// ARRAYS
-// -----------------------------
+// ============================================================
+// OBJECT ARRAYS
+// ============================================================
 
-let coins = [];
+const coins = [];
 
-let obstacles = [];
+const obstacles = [];
 
-let powerUps = [];
+const powerUps = [];
+
+const particles = [];
 
 
-// -----------------------------
+// ============================================================
 // AUDIO
-// -----------------------------
+// ============================================================
 
 let audioContext = null;
 
@@ -164,42 +268,58 @@ function playSound(
         frequency;
 
     gain.gain.setValueAtTime(
-        0.08,
+        0.07,
         audioContext.currentTime
     );
 
     gain.gain.exponentialRampToValueAtTime(
         0.001,
-        audioContext.currentTime + duration
+        audioContext.currentTime +
+        duration
     );
 
     oscillator.connect(gain);
 
-    gain.connect(audioContext.destination);
+    gain.connect(
+        audioContext.destination
+    );
 
     oscillator.start();
 
     oscillator.stop(
-        audioContext.currentTime + duration
+        audioContext.currentTime +
+        duration
     );
 }
 
 
-// -----------------------------
+// ============================================================
 // START GAME
-// -----------------------------
+// ============================================================
 
 function startGame() {
 
     initAudio();
 
-    if (audioContext.state === "suspended") {
+    if (
+        audioContext &&
+        audioContext.state === "suspended"
+    ) {
+
         audioContext.resume();
     }
 
-    startScreen.classList.add("hidden");
+    startScreen.classList.add(
+        "hidden"
+    );
 
-    gameOverScreen.classList.add("hidden");
+    pauseScreen.classList.add(
+        "hidden"
+    );
+
+    gameOverScreen.classList.add(
+        "hidden"
+    );
 
     score = 0;
 
@@ -211,27 +331,43 @@ function startGame() {
 
     gameSpeed = 4;
 
+    roadOffset = 0;
+
     coinTimer = 0;
 
     obstacleTimer = 0;
 
     powerTimer = 0;
 
+    combo = 0;
+
+    maxCombo = 0;
+
+    comboTimer = 0;
+
     shieldActive = false;
 
     boostActive = false;
+
+    magnetActive = false;
 
     shieldTime = 0;
 
     boostTime = 0;
 
-    particles = [];
+    magnetTime = 0;
 
-    coins = [];
+    player.movingLeft = false;
 
-    obstacles = [];
+    player.movingRight = false;
 
-    powerUps = [];
+    coins.length = 0;
+
+    obstacles.length = 0;
+
+    powerUps.length = 0;
+
+    particles.length = 0;
 
     player.x =
         canvas.width / 2 -
@@ -240,33 +376,88 @@ function startGame() {
     player.y =
         canvas.height - 120;
 
+    gameRunning = true;
+
+    gamePaused = false;
+
     updateUI();
 
     hidePowerStatuses();
 
-    gameRunning = true;
+    updateComboUI();
 
-    cancelAnimationFrame(animationId);
+    lastTime =
+        performance.now();
+
+    cancelAnimationFrame(
+        animationId
+    );
 
     animationId =
-        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(
+            gameLoop
+        );
 }
 
 
-// -----------------------------
-// GAME OVER
-// -----------------------------
+// ============================================================
+// PAUSE
+// ============================================================
 
-function endGame() {
+function pauseGame() {
 
-    gameRunning = false;
+    if (!gameRunning) return;
+
+    gamePaused = true;
 
     player.movingLeft = false;
 
     player.movingRight = false;
 
+    pauseScreen.classList.remove(
+        "hidden"
+    );
+}
 
-    if (score > bestScore) {
+
+function resumeGame() {
+
+    if (!gameRunning) return;
+
+    gamePaused = false;
+
+    pauseScreen.classList.add(
+        "hidden"
+    );
+
+    lastTime =
+        performance.now();
+
+    animationId =
+        requestAnimationFrame(
+            gameLoop
+        );
+}
+
+
+// ============================================================
+// GAME OVER
+// ============================================================
+
+function endGame() {
+
+    gameRunning = false;
+
+    gamePaused = false;
+
+    player.movingLeft = false;
+
+    player.movingRight = false;
+
+    if (
+        score >
+        bestScore
+    ) {
 
         bestScore = score;
 
@@ -276,8 +467,8 @@ function endGame() {
         );
     }
 
-
-    finalScore.textContent = score;
+    finalScore.textContent =
+        score;
 
     finalCoins.textContent =
         coinsCollected;
@@ -285,19 +476,27 @@ function endGame() {
     finalBest.textContent =
         bestScore;
 
+    finalCombo.textContent =
+        maxCombo;
+
     bestDisplay.textContent =
         bestScore;
 
+    gameOverScreen.classList.remove(
+        "hidden"
+    );
 
-    gameOverScreen.classList.remove("hidden");
-
-    playSound(120, 0.4, "sawtooth");
+    playSound(
+        120,
+        0.4,
+        "sawtooth"
+    );
 }
 
 
-// -----------------------------
+// ============================================================
 // UI
-// -----------------------------
+// ============================================================
 
 function updateUI() {
 
@@ -318,25 +517,34 @@ function updateUI() {
 }
 
 
-// -----------------------------
+// ============================================================
 // PLAYER DRAW
-// -----------------------------
+// ============================================================
 
 function drawPlayer() {
 
-    ctx.save();
+    const px =
+        player.x;
+
+    const py =
+        player.y;
 
 
-    // Shield
+    // Shield ring
 
     if (shieldActive) {
 
         ctx.beginPath();
 
         ctx.arc(
-            player.x + player.width / 2,
-            player.y + player.height / 2,
+            px +
+            player.width / 2,
+
+            py +
+            player.height / 2,
+
             45,
+
             0,
             Math.PI * 2
         );
@@ -346,34 +554,31 @@ function drawPlayer() {
 
         ctx.lineWidth = 4;
 
-        ctx.shadowBlur = 20;
-
-        ctx.shadowColor =
-            "#38bdf8";
-
         ctx.stroke();
     }
 
 
     // Body
 
-    ctx.fillStyle = "#3b82f6";
+    ctx.fillStyle =
+        "#3b82f6";
 
     ctx.fillRect(
-        player.x,
-        player.y,
+        px,
+        py,
         player.width,
         player.height
     );
 
 
-    // Shirt detail
+    // Shirt
 
-    ctx.fillStyle = "#1d4ed8";
+    ctx.fillStyle =
+        "#1d4ed8";
 
     ctx.fillRect(
-        player.x + 8,
-        player.y + 8,
+        px + 8,
+        py + 8,
         player.width - 16,
         10
     );
@@ -381,14 +586,19 @@ function drawPlayer() {
 
     // Head
 
-    ctx.fillStyle = "#f5cfa0";
+    ctx.fillStyle =
+        "#f5cfa0";
 
     ctx.beginPath();
 
     ctx.arc(
-        player.x + player.width / 2,
-        player.y - 5,
+        px +
+        player.width / 2,
+
+        py - 5,
+
         20,
+
         0,
         Math.PI * 2
     );
@@ -398,14 +608,19 @@ function drawPlayer() {
 
     // Hair
 
-    ctx.fillStyle = "#3f2d20";
+    ctx.fillStyle =
+        "#3f2d20";
 
     ctx.beginPath();
 
     ctx.arc(
-        player.x + player.width / 2,
-        player.y - 15,
+        px +
+        player.width / 2,
+
+        py - 15,
+
         18,
+
         Math.PI,
         Math.PI * 2
     );
@@ -415,21 +630,22 @@ function drawPlayer() {
 
     // Eyes
 
-    ctx.fillStyle = "#111827";
+    ctx.fillStyle =
+        "#111827";
 
     ctx.beginPath();
 
     ctx.arc(
-        player.x + 17,
-        player.y - 8,
+        px + 17,
+        py - 8,
         3,
         0,
         Math.PI * 2
     );
 
     ctx.arc(
-        player.x + 28,
-        player.y - 8,
+        px + 28,
+        py - 8,
         3,
         0,
         Math.PI * 2
@@ -442,98 +658,201 @@ function drawPlayer() {
 
     if (boostActive) {
 
-        ctx.fillStyle = "#f97316";
+        ctx.fillStyle =
+            "#f97316";
 
         ctx.beginPath();
 
         ctx.moveTo(
-            player.x + 10,
-            player.y + player.height
+            px + 10,
+            py + player.height
         );
 
         ctx.lineTo(
-            player.x + 18,
-            player.y + player.height + 25
+            px + 18,
+            py +
+            player.height +
+            25
         );
 
         ctx.lineTo(
-            player.x + 23,
-            player.y + player.height
+            px + 23,
+            py + player.height
         );
 
         ctx.fill();
 
 
-        ctx.fillStyle = "#facc15";
+        ctx.fillStyle =
+            "#facc15";
 
         ctx.beginPath();
 
         ctx.moveTo(
-            player.x + 24,
-            player.y + player.height
+            px + 24,
+            py + player.height
         );
 
         ctx.lineTo(
-            player.x + 30,
-            player.y + player.height + 18
+            px + 30,
+            py +
+            player.height +
+            18
         );
 
         ctx.lineTo(
-            player.x + 35,
-            player.y + player.height
+            px + 35,
+            py + player.height
         );
 
         ctx.fill();
     }
-
-
-    ctx.restore();
 }
 
 
-// -----------------------------
+// ============================================================
 // CREATE COIN
-// -----------------------------
+// ============================================================
 
 function createCoin() {
 
     const radius = 13;
 
+    // 15% chance of golden coin
+
+    const golden =
+        Math.random() < 0.15;
+
     coins.push({
 
         x:
             Math.random() *
-            (canvas.width - radius * 2) +
+            (
+                canvas.width -
+                radius * 2
+            ) +
             radius,
 
         y: -30,
 
-        radius: radius,
+        radius,
 
         speed:
-            gameSpeed + 1,
+            gameSpeed +
+            1,
 
-        rotation: 0
+        rotation: 0,
+
+        golden
     });
 }
 
 
-// -----------------------------
+// ============================================================
+// UPDATE COINS
+// ============================================================
+
+function updateCoins(delta) {
+
+    for (
+        let i = coins.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const coin =
+            coins[i];
+
+        coin.y +=
+            coin.speed *
+            delta;
+
+        coin.rotation +=
+            7 *
+            delta;
+
+
+        // Magnet effect
+
+        if (magnetActive) {
+
+            const dx =
+                player.x +
+                player.width / 2 -
+                coin.x;
+
+            const dy =
+                player.y +
+                player.height / 2 -
+                coin.y;
+
+            const distanceSq =
+                dx * dx +
+                dy * dy;
+
+            const magnetRange = 180;
+
+            if (
+                distanceSq <
+                magnetRange *
+                magnetRange
+            ) {
+
+                coin.x +=
+                    dx *
+                    delta *
+                    5;
+
+                coin.y +=
+                    dy *
+                    delta *
+                    5;
+            }
+        }
+
+
+        if (
+            coin.y >
+            canvas.height + 50
+        ) {
+
+            coins.splice(i, 1);
+        }
+    }
+}
+
+
+// ============================================================
 // DRAW COINS
-// -----------------------------
+// ============================================================
 
 function drawCoins() {
 
-    coins.forEach(coin => {
+    ctx.textAlign =
+        "center";
 
-        ctx.save();
+    ctx.textBaseline =
+        "middle";
 
-        coin.rotation += 0.12;
+    ctx.font =
+        "bold 13px Arial";
+
+
+    for (
+        const coin of coins
+    ) {
 
         const scale =
-            Math.abs(
-                Math.cos(coin.rotation)
+            Math.max(
+                Math.abs(
+                    Math.cos(
+                        coin.rotation
+                    )
+                ),
+                0.15
             );
+
+        ctx.save();
 
         ctx.translate(
             coin.x,
@@ -541,16 +860,10 @@ function drawCoins() {
         );
 
         ctx.scale(
-            Math.max(scale, 0.15),
+            scale,
             1
         );
 
-
-        ctx.fillStyle = "#facc15";
-
-        ctx.shadowBlur = 12;
-
-        ctx.shadowColor = "#facc15";
 
         ctx.beginPath();
 
@@ -562,80 +875,131 @@ function drawCoins() {
             Math.PI * 2
         );
 
+
+        if (coin.golden) {
+
+            ctx.fillStyle =
+                "#fbbf24";
+
+        } else {
+
+            ctx.fillStyle =
+                "#facc15";
+        }
+
         ctx.fill();
 
 
-        ctx.shadowBlur = 0;
+        ctx.fillStyle =
+            coin.golden
+                ? "#78350f"
+                : "#92400e";
 
-        ctx.fillStyle = "#92400e";
-
-        ctx.font =
-            "bold 14px Arial";
-
-        ctx.textAlign =
-            "center";
-
-        ctx.textBaseline =
-            "middle";
 
         ctx.fillText(
-            "$",
+            coin.golden
+                ? "★"
+                : "$",
             0,
             0
         );
 
 
         ctx.restore();
-    });
+    }
 }
 
 
-// -----------------------------
+// ============================================================
 // CREATE OBSTACLE
-// -----------------------------
+// ============================================================
 
 function createObstacle() {
 
     const width =
-        35 + Math.random() * 35;
+        35 +
+        Math.random() *
+        35;
 
     const height =
-        35 + Math.random() * 35;
+        35 +
+        Math.random() *
+        35;
 
     obstacles.push({
 
         x:
             Math.random() *
-            (canvas.width - width),
+            (
+                canvas.width -
+                width
+            ),
 
         y:
             -height,
 
-        width:
-            width,
+        width,
 
-        height:
-            height,
+        height,
 
         speed:
             gameSpeed +
-            Math.random() * 1.5,
+            Math.random() *
+            1.5,
 
         rotation:
-            Math.random() * Math.PI
+            Math.random() *
+            Math.PI
     });
 }
 
 
-// -----------------------------
+// ============================================================
+// UPDATE OBSTACLES
+// ============================================================
+
+function updateObstacles(delta) {
+
+    for (
+        let i =
+            obstacles.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const obstacle =
+            obstacles[i];
+
+        obstacle.y +=
+            obstacle.speed *
+            delta;
+
+        obstacle.rotation +=
+            0.9 *
+            delta;
+
+
+        if (
+            obstacle.y >
+            canvas.height +
+            100
+        ) {
+
+            obstacles.splice(i, 1);
+        }
+    }
+}
+
+
+// ============================================================
 // DRAW OBSTACLES
-// -----------------------------
+// ============================================================
 
 function drawObstacles() {
 
-    obstacles.forEach(obstacle => {
-
-        ctx.save();
+    for (
+        const obstacle of obstacles
+    ) {
 
         const centerX =
             obstacle.x +
@@ -644,6 +1008,8 @@ function drawObstacles() {
         const centerY =
             obstacle.y +
             obstacle.height / 2;
+
+        ctx.save();
 
         ctx.translate(
             centerX,
@@ -657,19 +1023,12 @@ function drawObstacles() {
         ctx.fillStyle =
             "#ef4444";
 
-        ctx.shadowBlur = 8;
-
-        ctx.shadowColor =
-            "#ef4444";
-
         ctx.fillRect(
             -obstacle.width / 2,
             -obstacle.height / 2,
             obstacle.width,
             obstacle.height
         );
-
-        ctx.shadowBlur = 0;
 
         ctx.fillStyle =
             "#7f1d1d";
@@ -682,60 +1041,117 @@ function drawObstacles() {
         );
 
         ctx.restore();
-    });
+    }
 }
 
 
-// -----------------------------
+// ============================================================
 // CREATE POWER-UP
-// -----------------------------
+// ============================================================
 
 function createPowerUp() {
 
-    const types =
-        ["shield", "boost"];
+    const random =
+        Math.random();
 
-    const type =
-        types[
-            Math.floor(
-                Math.random() *
-                types.length
-            )
-        ];
+    let type;
+
+    if (random < 0.34) {
+
+        type = "shield";
+
+    } else if (random < 0.67) {
+
+        type = "boost";
+
+    } else {
+
+        type = "magnet";
+    }
 
 
     powerUps.push({
 
         x:
             Math.random() *
-            (canvas.width - 40) +
+            (
+                canvas.width - 40
+            ) +
             20,
 
         y: -40,
 
-        radius: 17,
+        radius: 18,
 
-        type: type,
+        type,
 
         speed:
-            gameSpeed + 0.5,
+            gameSpeed +
+            0.5,
 
         rotation: 0
     });
 }
 
 
-// -----------------------------
+// ============================================================
+// UPDATE POWER-UPS
+// ============================================================
+
+function updatePowerUps(delta) {
+
+    for (
+        let i =
+            powerUps.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const power =
+            powerUps[i];
+
+        power.y +=
+            power.speed *
+            delta;
+
+        power.rotation +=
+            3.5 *
+            delta;
+
+
+        if (
+            power.y >
+            canvas.height +
+            60
+        ) {
+
+            powerUps.splice(i, 1);
+        }
+    }
+}
+
+
+// ============================================================
 // DRAW POWER-UPS
-// -----------------------------
+// ============================================================
 
 function drawPowerUps() {
 
-    powerUps.forEach(power => {
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "middle";
+
+    ctx.font =
+        "bold 17px Arial";
+
+
+    for (
+        const power of powerUps
+    ) {
 
         ctx.save();
-
-        power.rotation += 0.06;
 
         ctx.translate(
             power.x,
@@ -747,46 +1163,52 @@ function drawPowerUps() {
         );
 
 
-        if (power.type === "shield") {
+        if (
+            power.type ===
+            "shield"
+        ) {
 
             ctx.fillStyle =
                 "#38bdf8";
 
-            ctx.shadowBlur = 15;
-
-            ctx.shadowColor =
-                "#38bdf8";
-
             ctx.beginPath();
 
-            ctx.moveTo(0, -18);
+            ctx.moveTo(
+                0,
+                -18
+            );
 
-            ctx.lineTo(15, -10);
+            ctx.lineTo(
+                15,
+                -10
+            );
 
-            ctx.lineTo(11, 10);
+            ctx.lineTo(
+                11,
+                10
+            );
 
-            ctx.lineTo(0, 18);
+            ctx.lineTo(
+                0,
+                18
+            );
 
-            ctx.lineTo(-11, 10);
+            ctx.lineTo(
+                -11,
+                10
+            );
 
-            ctx.lineTo(-15, -10);
+            ctx.lineTo(
+                -15,
+                -10
+            );
 
             ctx.closePath();
 
             ctx.fill();
 
-            ctx.shadowBlur = 0;
-
-            ctx.fillStyle = "white";
-
-            ctx.font =
-                "bold 18px Arial";
-
-            ctx.textAlign =
-                "center";
-
-            ctx.textBaseline =
-                "middle";
+            ctx.fillStyle =
+                "white";
 
             ctx.fillText(
                 "S",
@@ -794,14 +1216,13 @@ function drawPowerUps() {
                 1
             );
 
-        } else {
+
+        } else if (
+            power.type ===
+            "boost"
+        ) {
 
             ctx.fillStyle =
-                "#f97316";
-
-            ctx.shadowBlur = 15;
-
-            ctx.shadowColor =
                 "#f97316";
 
             ctx.beginPath();
@@ -816,37 +1237,58 @@ function drawPowerUps() {
 
             ctx.fill();
 
-            ctx.shadowBlur = 0;
-
             ctx.fillStyle =
                 "white";
-
-            ctx.font =
-                "bold 18px Arial";
-
-            ctx.textAlign =
-                "center";
-
-            ctx.textBaseline =
-                "middle";
 
             ctx.fillText(
                 "⚡",
                 0,
                 1
             );
+
+
+        } else {
+
+            // Magnet
+
+            ctx.fillStyle =
+                "#c084fc";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                0,
+                0,
+                18,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+
+            ctx.fillStyle =
+                "white";
+
+            ctx.fillText(
+                "🧲",
+                0,
+                1
+            );
         }
 
         ctx.restore();
-    });
+    }
 }
 
 
-// -----------------------------
+// ============================================================
 // COLLISION
-// -----------------------------
+// ============================================================
 
-function isColliding(a, b) {
+function isColliding(
+    a,
+    b
+) {
 
     return (
 
@@ -865,14 +1307,24 @@ function isColliding(a, b) {
 }
 
 
-// -----------------------------
+// ============================================================
 // COIN COLLECTION
-// -----------------------------
+// ============================================================
 
 function collectCoins() {
 
+    const playerCenterX =
+        player.x +
+        player.width / 2;
+
+    const playerCenterY =
+        player.y +
+        player.height / 2;
+
+
     for (
-        let i = coins.length - 1;
+        let i =
+            coins.length - 1;
         i >= 0;
         i--
     ) {
@@ -880,62 +1332,128 @@ function collectCoins() {
         const coin =
             coins[i];
 
-
-        const distanceX =
-            player.x +
-            player.width / 2 -
+        const dx =
+            playerCenterX -
             coin.x;
 
-        const distanceY =
-            player.y +
-            player.height / 2 -
+        const dy =
+            playerCenterY -
             coin.y;
 
-        const distance =
-            Math.sqrt(
-                distanceX * distanceX +
-                distanceY * distanceY
-            );
-
+        const radius =
+            coin.radius +
+            player.width / 2;
 
         if (
-            distance <
-            coin.radius +
-            player.width / 2
+            dx * dx +
+            dy * dy <
+            radius * radius
         ) {
 
             coins.splice(i, 1);
 
             coinsCollected++;
 
-            score += 10;
+            // Combo
+
+            combo++;
+
+            comboTimer =
+                COMBO_DURATION;
+
+            if (
+                combo >
+                maxCombo
+            ) {
+
+                maxCombo =
+                    combo;
+            }
+
+
+            let points =
+                coin.golden
+                    ? 25
+                    : 10;
+
+
+            // Combo bonus
+
+            if (
+                combo >= 5
+            ) {
+
+                points +=
+                    Math.min(
+                        combo * 2,
+                        30
+                    );
+            }
+
+
+            score +=
+                points;
+
 
             createParticles(
                 coin.x,
                 coin.y,
-                12
+                coin.golden
+                    ? 14
+                    : 8
             );
 
+
             playSound(
-                700,
+                coin.golden
+                    ? 1000
+                    : 700,
+
                 0.08,
+
                 "square"
             );
 
+
+            if (
+                combo === 5 ||
+                combo === 10 ||
+                combo === 20
+            ) {
+
+                showPowerMessage(
+                    "🔥 COMBO x" +
+                    combo
+                );
+            }
+
+
             updateUI();
+
+            updateComboUI();
         }
     }
 }
 
 
-// -----------------------------
+// ============================================================
 // POWER-UP COLLECTION
-// -----------------------------
+// ============================================================
 
 function collectPowerUps() {
 
+    const playerCenterX =
+        player.x +
+        player.width / 2;
+
+    const playerCenterY =
+        player.y +
+        player.height / 2;
+
+
     for (
-        let i = powerUps.length - 1;
+        let i =
+            powerUps.length - 1;
         i >= 0;
         i--
     ) {
@@ -943,38 +1461,38 @@ function collectPowerUps() {
         const power =
             powerUps[i];
 
-
         const dx =
-            player.x +
-            player.width / 2 -
+            playerCenterX -
             power.x;
 
         const dy =
-            player.y +
-            player.height / 2 -
+            playerCenterY -
             power.y;
 
-        const distance =
-            Math.sqrt(
-                dx * dx +
-                dy * dy
-            );
+        const radius =
+            power.radius +
+            player.width / 2;
 
 
         if (
-            distance <
-            power.radius +
-            player.width / 2
+            dx * dx +
+            dy * dy <
+            radius * radius
         ) {
 
             powerUps.splice(i, 1);
 
 
-            if (power.type === "shield") {
+            if (
+                power.type ===
+                "shield"
+            ) {
 
-                shieldActive = true;
+                shieldActive =
+                    true;
 
-                shieldTime = 600;
+                shieldTime =
+                    600;
 
                 showPowerMessage(
                     "🛡️ SHIELD ACTIVATED!"
@@ -986,11 +1504,17 @@ function collectPowerUps() {
                     "sine"
                 );
 
-            } else {
 
-                boostActive = true;
+            } else if (
+                power.type ===
+                "boost"
+            ) {
 
-                boostTime = 480;
+                boostActive =
+                    true;
+
+                boostTime =
+                    480;
 
                 showPowerMessage(
                     "⚡ SPEED BOOST!"
@@ -1001,6 +1525,25 @@ function collectPowerUps() {
                     0.2,
                     "square"
                 );
+
+
+            } else {
+
+                magnetActive =
+                    true;
+
+                magnetTime =
+                    540;
+
+                showPowerMessage(
+                    "🧲 MAGNET ACTIVATED!"
+                );
+
+                playSound(
+                    750,
+                    0.2,
+                    "triangle"
+                );
             }
 
             updatePowerStatus();
@@ -1009,14 +1552,15 @@ function collectPowerUps() {
 }
 
 
-// -----------------------------
+// ============================================================
 // OBSTACLE COLLISION
-// -----------------------------
+// ============================================================
 
 function checkObstacleCollision() {
 
     for (
-        let i = obstacles.length - 1;
+        let i =
+            obstacles.length - 1;
         i >= 0;
         i--
     ) {
@@ -1032,14 +1576,21 @@ function checkObstacleCollision() {
             )
         ) {
 
-            obstacles.splice(i, 1);
+            obstacles.splice(
+                i,
+                1
+            );
 
 
-            if (shieldActive) {
+            if (
+                shieldActive
+            ) {
 
-                shieldActive = false;
+                shieldActive =
+                    false;
 
-                shieldTime = 0;
+                shieldTime =
+                    0;
 
                 createParticles(
                     player.x +
@@ -1048,7 +1599,7 @@ function checkObstacleCollision() {
                     player.y +
                     player.height / 2,
 
-                    25
+                    18
                 );
 
                 showPowerMessage(
@@ -1069,6 +1620,13 @@ function checkObstacleCollision() {
 
             lives--;
 
+            combo = 0;
+
+            comboTimer = 0;
+
+            updateComboUI();
+
+
             createParticles(
                 player.x +
                 player.width / 2,
@@ -1076,8 +1634,9 @@ function checkObstacleCollision() {
                 player.y +
                 player.height / 2,
 
-                20
+                18
             );
+
 
             playSound(
                 150,
@@ -1085,10 +1644,13 @@ function checkObstacleCollision() {
                 "sawtooth"
             );
 
+
             updateUI();
 
 
-            if (lives <= 0) {
+            if (
+                lives <= 0
+            ) {
 
                 endGame();
 
@@ -1096,7 +1658,7 @@ function checkObstacleCollision() {
             }
 
 
-            // Push player away after hit
+            // Push player
 
             player.x +=
                 player.x <
@@ -1104,9 +1666,11 @@ function checkObstacleCollision() {
                     ? 40
                     : -40;
 
+
             player.x =
                 Math.max(
                     0,
+
                     Math.min(
                         canvas.width -
                         player.width,
@@ -1115,42 +1679,55 @@ function checkObstacleCollision() {
                     )
                 );
 
+
             return;
         }
     }
 }
 
 
-// -----------------------------
+// ============================================================
 // UPDATE PLAYER
-// -----------------------------
+// ============================================================
 
-function updatePlayer() {
+function updatePlayer(delta) {
 
     let currentSpeed =
         player.speed;
 
-    if (boostActive) {
 
-        currentSpeed *= 1.8;
+    if (
+        boostActive
+    ) {
+
+        currentSpeed *=
+            1.8;
     }
 
 
-    if (player.movingLeft) {
+    if (
+        player.movingLeft
+    ) {
 
         player.x -=
-            currentSpeed;
+            currentSpeed *
+            delta;
     }
 
 
-    if (player.movingRight) {
+    if (
+        player.movingRight
+    ) {
 
         player.x +=
-            currentSpeed;
+            currentSpeed *
+            delta;
     }
 
 
-    if (player.x < 0) {
+    if (
+        player.x < 0
+    ) {
 
         player.x = 0;
     }
@@ -1169,88 +1746,29 @@ function updatePlayer() {
 }
 
 
-// -----------------------------
-// UPDATE COINS
-// -----------------------------
-
-function updateCoins() {
-
-    coins.forEach(coin => {
-
-        coin.y +=
-            coin.speed;
-    });
-
-
-    coins =
-        coins.filter(
-            coin =>
-                coin.y <
-                canvas.height + 50
-        );
-}
-
-
-// -----------------------------
-// UPDATE OBSTACLES
-// -----------------------------
-
-function updateObstacles() {
-
-    obstacles.forEach(obstacle => {
-
-        obstacle.y +=
-            obstacle.speed;
-
-        obstacle.rotation +=
-            0.015;
-    });
-
-
-    obstacles =
-        obstacles.filter(
-            obstacle =>
-                obstacle.y <
-                canvas.height + 100
-        );
-}
-
-
-// -----------------------------
-// UPDATE POWER-UPS
-// -----------------------------
-
-function updatePowerUps() {
-
-    powerUps.forEach(power => {
-
-        power.y +=
-            power.speed;
-    });
-
-
-    powerUps =
-        powerUps.filter(
-            power =>
-                power.y <
-                canvas.height + 60
-        );
-}
-
-
-// -----------------------------
+// ============================================================
 // POWER TIMERS
-// -----------------------------
+// ============================================================
 
-function updatePowerTimers() {
+function updatePowerTimers(
+    delta
+) {
 
-    if (shieldActive) {
+    if (
+        shieldActive
+    ) {
 
-        shieldTime--;
+        shieldTime -=
+            delta * 60;
 
-        if (shieldTime <= 0) {
+        if (
+            shieldTime <= 0
+        ) {
 
-            shieldActive = false;
+            shieldTime = 0;
+
+            shieldActive =
+                false;
 
             showPowerMessage(
                 "🛡️ SHIELD ENDED"
@@ -1259,16 +1777,47 @@ function updatePowerTimers() {
     }
 
 
-    if (boostActive) {
+    if (
+        boostActive
+    ) {
 
-        boostTime--;
+        boostTime -=
+            delta * 60;
 
-        if (boostTime <= 0) {
+        if (
+            boostTime <= 0
+        ) {
 
-            boostActive = false;
+            boostTime = 0;
+
+            boostActive =
+                false;
 
             showPowerMessage(
                 "⚡ BOOST ENDED"
+            );
+        }
+    }
+
+
+    if (
+        magnetActive
+    ) {
+
+        magnetTime -=
+            delta * 60;
+
+        if (
+            magnetTime <= 0
+        ) {
+
+            magnetTime = 0;
+
+            magnetActive =
+                false;
+
+            showPowerMessage(
+                "🧲 MAGNET ENDED"
             );
         }
     }
@@ -1278,9 +1827,9 @@ function updatePowerTimers() {
 }
 
 
-// -----------------------------
+// ============================================================
 // POWER STATUS UI
-// -----------------------------
+// ============================================================
 
 function updatePowerStatus() {
 
@@ -1292,6 +1841,11 @@ function updatePowerStatus() {
     boostStatus.classList.toggle(
         "hidden",
         !boostActive
+    );
+
+    magnetStatus.classList.toggle(
+        "hidden",
+        !magnetActive
     );
 }
 
@@ -1305,17 +1859,24 @@ function hidePowerStatuses() {
     boostStatus.classList.add(
         "hidden"
     );
+
+    magnetStatus.classList.add(
+        "hidden"
+    );
 }
 
 
-// -----------------------------
+// ============================================================
 // POWER MESSAGE
-// -----------------------------
+// ============================================================
 
-let powerMessageTimer = null;
+let powerMessageTimer =
+    null;
 
 
-function showPowerMessage(message) {
+function showPowerMessage(
+    message
+) {
 
     powerMessage.textContent =
         message;
@@ -1331,19 +1892,75 @@ function showPowerMessage(message) {
 
 
     powerMessageTimer =
-        setTimeout(() => {
+        setTimeout(
+            () => {
 
-            powerMessage.classList.remove(
-                "show"
-            );
+                powerMessage.classList.remove(
+                    "show"
+                );
 
-        }, 1200);
+            },
+            1200
+        );
 }
 
 
-// -----------------------------
+// ============================================================
+// COMBO UI
+// ============================================================
+
+function updateComboUI() {
+
+    if (
+        combo > 1
+    ) {
+
+        comboDisplay.textContent =
+            "🔥 COMBO x" +
+            combo;
+
+        comboDisplay.classList.add(
+            "show"
+        );
+
+    } else {
+
+        comboDisplay.classList.remove(
+            "show"
+        );
+    }
+}
+
+
+function updateCombo(delta) {
+
+    if (
+        combo <= 0
+    ) {
+        return;
+    }
+
+
+    comboTimer -=
+        delta * 60;
+
+
+    if (
+        comboTimer <= 0
+    ) {
+
+        combo = 0;
+
+        comboTimer = 0;
+
+        updateComboUI();
+    }
+}
+
+
+// ============================================================
 // PARTICLES
-// -----------------------------
+// ============================================================
 
 function createParticles(
     x,
@@ -1359,60 +1976,96 @@ function createParticles(
 
         particles.push({
 
-            x: x,
+            x,
 
-            y: y,
+            y,
 
             vx:
-                (Math.random() - 0.5) *
-                6,
+                (
+                    Math.random() -
+                    0.5
+                ) * 6,
 
             vy:
-                (Math.random() - 0.5) *
-                6,
+                (
+                    Math.random() -
+                    0.5
+                ) * 6,
 
-            life: 30 +
-                Math.random() * 20,
+            life:
+                30 +
+                Math.random() *
+                20,
 
             size:
                 2 +
-                Math.random() * 4
+                Math.random() *
+                4
         });
     }
 }
 
 
-function updateParticles() {
+function updateParticles(
+    delta
+) {
 
-    particles.forEach(particle => {
+    for (
+        let i =
+            particles.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const particle =
+            particles[i];
+
 
         particle.x +=
-            particle.vx;
+            particle.vx *
+            delta *
+            60;
+
 
         particle.y +=
-            particle.vy;
+            particle.vy *
+            delta *
+            60;
+
 
         particle.vy +=
-            0.08;
+            0.08 *
+            delta *
+            60;
 
-        particle.life--;
-    });
+
+        particle.life -=
+            delta *
+            60;
 
 
-    particles =
-        particles.filter(
-            particle =>
-                particle.life > 0
-        );
+        if (
+            particle.life <= 0
+        ) {
+
+            particles.splice(
+                i,
+                1
+            );
+        }
+    }
 }
 
 
 function drawParticles() {
 
-    particles.forEach(particle => {
+    for (
+        const particle of particles
+    ) {
 
         ctx.globalAlpha =
-            particle.life / 50;
+            particle.life /
+            50;
 
         ctx.fillStyle =
             "#facc15";
@@ -1428,18 +2081,20 @@ function drawParticles() {
         );
 
         ctx.fill();
-    });
+    }
 
 
     ctx.globalAlpha = 1;
 }
 
 
-// -----------------------------
+// ============================================================
 // BACKGROUND
-// -----------------------------
+// ============================================================
 
-function drawBackground() {
+function drawBackground(
+    delta
+) {
 
     ctx.fillStyle =
         "#374151";
@@ -1452,14 +2107,17 @@ function drawBackground() {
     );
 
 
-    // Road movement
-
     roadOffset +=
-        gameSpeed;
+        gameSpeed *
+        delta *
+        60;
 
-    if (roadOffset > 50) {
 
-        roadOffset = 0;
+    if (
+        roadOffset > 50
+    ) {
+
+        roadOffset %= 50;
     }
 
 
@@ -1471,7 +2129,8 @@ function drawBackground() {
 
     for (
         let y =
-            -50 + roadOffset;
+            -50 +
+            roadOffset;
 
         y <
         canvas.height;
@@ -1481,7 +2140,8 @@ function drawBackground() {
 
         ctx.fillRect(
 
-            canvas.width / 2 - 5,
+            canvas.width / 2 -
+            5,
 
             y,
 
@@ -1515,20 +2175,39 @@ function drawBackground() {
 }
 
 
-// -----------------------------
+// ============================================================
 // SCORE + LEVEL
-// -----------------------------
+// ============================================================
 
-function updateScore() {
+let scoreTimer = 0;
 
-    score++;
 
-    scoreDisplay.textContent =
-        score;
+function updateScore(
+    delta
+) {
+
+    scoreTimer +=
+        delta;
+
+
+    if (
+        scoreTimer >=
+        1 / 60
+    ) {
+
+        score++;
+
+        scoreTimer = 0;
+
+        scoreDisplay.textContent =
+            score;
+    }
 
 
     const newLevel =
-        Math.floor(score / 500) + 1;
+        Math.floor(
+            score / 500
+        ) + 1;
 
 
     if (
@@ -1538,15 +2217,18 @@ function updateScore() {
         level =
             newLevel;
 
+
         gameSpeed =
             4 +
             (level - 1) *
             0.5;
 
+
         showPowerMessage(
             "🔥 LEVEL " +
             level
         );
+
 
         playSound(
             600,
@@ -1554,22 +2236,46 @@ function updateScore() {
             "triangle"
         );
 
+
         updateUI();
     }
 }
 
 
-// -----------------------------
+// ============================================================
 // GAME LOOP
-// -----------------------------
+// ============================================================
 
-function gameLoop() {
+function gameLoop(
+    currentTime
+) {
 
-    if (!gameRunning) {
+    if (
+        !gameRunning ||
+        gamePaused
+    ) {
 
         return;
     }
 
+
+    let delta =
+        currentTime -
+        lastTime;
+
+
+    lastTime =
+        currentTime;
+
+
+    delta =
+        Math.min(
+            delta,
+            MAX_DELTA
+        ) / 1000;
+
+
+    // Clear
 
     ctx.clearRect(
         0,
@@ -1581,31 +2287,39 @@ function gameLoop() {
 
     // Background
 
-    drawBackground();
+    drawBackground(
+        delta
+    );
 
 
     // Player
 
-    updatePlayer();
+    updatePlayer(
+        delta
+    );
 
     drawPlayer();
 
 
-    // Coins
+    // ========================================================
+    // COINS
+    // ========================================================
 
-    coinTimer++;
+    coinTimer +=
+        delta *
+        60;
 
 
     const coinSpawnRate =
         Math.max(
-            28,
-            60 -
+            25,
+            58 -
             level * 2
         );
 
 
     if (
-        coinTimer >
+        coinTimer >=
         coinSpawnRate
     ) {
 
@@ -1615,28 +2329,34 @@ function gameLoop() {
     }
 
 
-    updateCoins();
-
-    drawCoins();
+    updateCoins(
+        delta
+    );
 
     collectCoins();
 
+    drawCoins();
 
-    // Obstacles
 
-    obstacleTimer++;
+    // ========================================================
+    // OBSTACLES
+    // ========================================================
+
+    obstacleTimer +=
+        delta *
+        60;
 
 
     const obstacleSpawnRate =
         Math.max(
-            45,
-            90 -
+            42,
+            88 -
             level * 3
         );
 
 
     if (
-        obstacleTimer >
+        obstacleTimer >=
         obstacleSpawnRate
     ) {
 
@@ -1646,21 +2366,30 @@ function gameLoop() {
     }
 
 
-    updateObstacles();
-
-    drawObstacles();
+    updateObstacles(
+        delta
+    );
 
     checkObstacleCollision();
 
+    drawObstacles();
 
-    // Power-ups
 
-    powerTimer++;
+    // ========================================================
+    // POWER-UPS
+    // ========================================================
 
+    powerTimer +=
+        delta *
+        60;
+
+
+    // First power-up after
+    // approximately 11.5 seconds
 
     if (
-        powerTimer >
-        700
+        powerTimer >=
+        690
     ) {
 
         createPowerUp();
@@ -1669,29 +2398,49 @@ function gameLoop() {
     }
 
 
-    updatePowerUps();
-
-    drawPowerUps();
+    updatePowerUps(
+        delta
+    );
 
     collectPowerUps();
 
+    drawPowerUps();
 
-    // Particles
 
-    updateParticles();
+    // ========================================================
+    // PARTICLES
+    // ========================================================
+
+    updateParticles(
+        delta
+    );
 
     drawParticles();
 
 
-    // Timers
+    // ========================================================
+    // TIMERS
+    // ========================================================
 
-    updatePowerTimers();
+    updatePowerTimers(
+        delta
+    );
+
+    updateCombo(
+        delta
+    );
 
 
-    // Score
+    // ========================================================
+    // SCORE
+    // ========================================================
 
-    updateScore();
+    updateScore(
+        delta
+    );
 
+
+    // Continue
 
     animationId =
         requestAnimationFrame(
@@ -1700,17 +2449,21 @@ function gameLoop() {
 }
 
 
-// -----------------------------
+// ============================================================
 // KEYBOARD CONTROLS
-// -----------------------------
+// ============================================================
 
 document.addEventListener(
     "keydown",
     function(event) {
 
+        const key =
+            event.key.toLowerCase();
+
+
         if (
-            event.key === "ArrowLeft" ||
-            event.key.toLowerCase() === "a"
+            key === "arrowleft" ||
+            key === "a"
         ) {
 
             event.preventDefault();
@@ -1721,14 +2474,41 @@ document.addEventListener(
 
 
         if (
-            event.key === "ArrowRight" ||
-            event.key.toLowerCase() === "d"
+            key === "arrowright" ||
+            key === "d"
         ) {
 
             event.preventDefault();
 
             player.movingRight =
                 true;
+        }
+
+
+        // Pause with P or Escape
+
+        if (
+            key === "p" ||
+            key === "escape"
+        ) {
+
+            event.preventDefault();
+
+            if (
+                gameRunning
+            ) {
+
+                if (
+                    gamePaused
+                ) {
+
+                    resumeGame();
+
+                } else {
+
+                    pauseGame();
+                }
+            }
         }
     }
 );
@@ -1738,9 +2518,13 @@ document.addEventListener(
     "keyup",
     function(event) {
 
+        const key =
+            event.key.toLowerCase();
+
+
         if (
-            event.key === "ArrowLeft" ||
-            event.key.toLowerCase() === "a"
+            key === "arrowleft" ||
+            key === "a"
         ) {
 
             player.movingLeft =
@@ -1749,8 +2533,8 @@ document.addEventListener(
 
 
         if (
-            event.key === "ArrowRight" ||
-            event.key.toLowerCase() === "d"
+            key === "arrowright" ||
+            key === "d"
         ) {
 
             player.movingRight =
@@ -1760,39 +2544,51 @@ document.addEventListener(
 );
 
 
-// -----------------------------
+// ============================================================
 // MOBILE CONTROLS
-// -----------------------------
+// ============================================================
 
-function startMovingLeft(event) {
+function startMovingLeft(
+    event
+) {
 
     event.preventDefault();
 
-    player.movingLeft = true;
+    player.movingLeft =
+        true;
 }
 
 
-function stopMovingLeft(event) {
+function stopMovingLeft(
+    event
+) {
 
     event.preventDefault();
 
-    player.movingLeft = false;
+    player.movingLeft =
+        false;
 }
 
 
-function startMovingRight(event) {
+function startMovingRight(
+    event
+) {
 
     event.preventDefault();
 
-    player.movingRight = true;
+    player.movingRight =
+        true;
 }
 
 
-function stopMovingRight(event) {
+function stopMovingRight(
+    event
+) {
 
     event.preventDefault();
 
-    player.movingRight = false;
+    player.movingRight =
+        false;
 }
 
 
@@ -1838,9 +2634,9 @@ rightButton.addEventListener(
 );
 
 
-// -----------------------------
+// ============================================================
 // BUTTONS
-// -----------------------------
+// ============================================================
 
 startButton.addEventListener(
     "click",
@@ -1854,10 +2650,62 @@ restartButton.addEventListener(
 );
 
 
-// -----------------------------
+pauseButton.addEventListener(
+    "click",
+    function() {
+
+        if (!gameRunning) return;
+
+        if (gamePaused) {
+
+            resumeGame();
+
+        } else {
+
+            pauseGame();
+        }
+    }
+);
+
+
+resumeButton.addEventListener(
+    "click",
+    resumeGame
+);
+
+
+// ============================================================
+// VISIBILITY
+// ============================================================
+
+// Automatically pause if the player
+// switches browser tabs.
+
+document.addEventListener(
+    "visibilitychange",
+    function() {
+
+        if (
+            document.hidden &&
+            gameRunning &&
+            !gamePaused
+        ) {
+
+            pauseGame();
+        }
+    }
+);
+
+
+// ============================================================
 // INITIALIZE
-// -----------------------------
+// ============================================================
 
 resizeCanvas();
 
 updateUI();
+
+updatePowerStatus();
+
+updateComboUI();
+```
